@@ -4,19 +4,53 @@
   "description": "Sync clipboard across your devices",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "author": "Logic Tan",
   "license": "MIT",
   "dependencies": {
     "@electron-utils/electron-oauth-github": "^0.2.4",
-    "electron": "^13.1.9",
+    "electron-squirrel-startup": "^1.0.0",
     "github-api": "^3.4.0",
     "keytar": "^7.7.0",
     "materialize-css": "^1.0.0-rc.2",
     "spark-md5": "^3.0.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59"
+    "@electron-forge/cli": "^6.0.0-beta.59",
+    "@electron-forge/maker-deb": "^6.0.0-beta.59",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.59",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.59",
+    "@electron-forge/maker-zip": "^6.0.0-beta.59",
+    "electron": "^13.2.1"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "clipbroad"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
   }
 }
