@@ -133,7 +133,7 @@ function CheckClipboard() {
             });
             UpdateUl();
         }
-    } else if (history.length < 1 || history[0].md5 != textMD5) {
+    } else if (text != '' && (history.length < 1 || history[0].md5 != textMD5)) {
         history = history.filter((item) => item.md5 != textMD5);
         history.unshift({
             time: new Date().getTime(),
@@ -285,6 +285,6 @@ setInterval(() => {
     CheckClipboard();
 }, 500);
 
-// setInterval(() => {
-//     UploadGithub();
-// }, 30000);
+setInterval(() => {
+    UploadGithub();
+}, 30000);
