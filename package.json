@@ -1,0 +1,19 @@
+{
+  "name": "clipbroad",
+  "version": "1.0.0",
+  "description": "Sync clipboard across your devices",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Logic Tan",
+  "license": "MIT",
+  "dependencies": {
+    "@electron-utils/electron-oauth-github": "^0.2.4",
+    "electron": "^13.1.9",
+    "github-api": "^3.4.0",
+    "keytar": "^7.7.0",
+    "materialize-css": "^1.0.0-rc.2",
+    "spark-md5": "^3.0.1"
+  }
+}
