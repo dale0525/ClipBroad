@@ -31,7 +31,7 @@
                         scope: 'repo',
                         response_type: 'code',
                         redirect_uri:
-                            'http://localhost:8080/redirect',
+                            'http://localhost:8080/#/redirect',
                     })
                     .then((res) => {
                         console.log(res.authResponse.access_token);
