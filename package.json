@@ -1,56 +1,40 @@
 {
   "name": "clipbroad",
-  "version": "1.0.0",
-  "description": "Sync clipboard across your devices",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
-  },
+  "version": "0.0.1",
+  "description": "Sync your clipboard across multiple devices",
+  "productName": "ClipBroad",
   "author": "Logic Tan",
-  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No test specified\" && exit 0"
+  },
   "dependencies": {
-    "@electron-utils/electron-oauth-github": "^0.2.4",
-    "electron-squirrel-startup": "^1.0.0",
+    "@quasar/extras": "^1.0.0",
+    "core-js": "^3.6.5",
     "github-api": "^3.4.0",
-    "keytar": "^7.7.0",
-    "materialize-css": "^1.0.0-rc.2",
-    "spark-md5": "^3.0.1"
+    "hellojs": "^2.0.0-4",
+    "quasar": "^2.0.0",
+    "spark-md5": "^3.0.1",
+    "vuex": "^4.0.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.59",
-    "@electron-forge/maker-deb": "^6.0.0-beta.59",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.59",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.59",
-    "@electron-forge/maker-zip": "^6.0.0-beta.59",
+    "@quasar/app": "^3.0.0",
     "electron": "^13.2.1"
   },
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "clipbroad"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
+  "browserslist": [
+    "last 10 Chrome versions",
+    "last 10 Firefox versions",
+    "last 4 Edge versions",
+    "last 7 Safari versions",
+    "last 8 Android versions",
+    "last 8 ChromeAndroid versions",
+    "last 8 FirefoxAndroid versions",
+    "last 10 iOS versions",
+    "last 5 Opera versions"
+  ],
+  "engines": {
+    "node": ">= 12.22.1",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
   }
 }
