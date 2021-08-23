@@ -1,12 +1,12 @@
 <template>
-    <q-page class="q-pa-md">
+    <q-page class="q-pa-md q-electron-drag">
         <q-list bordered separator>
             <q-item
                 v-for="(item, index) in items"
                 :key="index"
                 clickable
                 v-ripple
-                @click="copyItem(index)"
+                @dblclick="copyItem(index)"
             >
                 <q-item-section avatar>
                     <q-icon color="primary" :name="itemIcon(item.type)" />

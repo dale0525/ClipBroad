@@ -11,11 +11,6 @@ const routes = [
         ],
     },
 
-    {
-        path: '/redirect',
-        component: () => import('pages/Redirect.vue'),
-    },
-
     // Always leave this as last one,
     // but you can also remove it
     {

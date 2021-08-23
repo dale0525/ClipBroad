@@ -18,7 +18,7 @@
             </q-toolbar>
         </q-header>
 
-        <q-footer elevated v-if="$q.platform.is.cordova">
+        <q-footer elevated v-if="$q.platform.is.cordova || $q.platform.is.mobile">
             <q-tabs>
                 <Footer
                     v-for="footer in footers"

@@ -7,6 +7,7 @@
 // https://v2.quasar.dev/quasar-cli/quasar-conf-js
 
 const { configure } = require('quasar/wrappers');
+const path = require('path');
 
 module.exports = configure(function (ctx) {
     return {
@@ -40,7 +41,8 @@ module.exports = configure(function (ctx) {
 
         // Full list of options: https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
         build: {
-            vueRouterMode: 'hash', // available values: 'hash', 'history'
+            vueRouterMode: 'history', // available values: 'hash', 'history'
+            publicPath: '/',
 
             // transpile: false,
 
@@ -70,9 +72,6 @@ module.exports = configure(function (ctx) {
             https: false,
             port: 8080,
             open: true, // opens browser window automatically
-            // historyApiFallback: {
-            //     disableDotRule: true,
-            // },
         },
 
         // https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework

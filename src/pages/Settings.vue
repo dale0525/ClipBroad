@@ -4,39 +4,19 @@
             <q-btn
                 v-if="!isLogin()"
                 color="primary"
-                icon="github"
+                icon="login"
                 label="Login With Github"
-                @click="auth('github')"
+                @click="Auth()"
             />
         </div>
     </q-page>
 </template>
 
 <script>
-    const hello = require('hellojs/dist/hello.all.js');
     export default {
         methods: {
-            auth(provider) {
-                hello.init(
-                    {
-                        github: 'fa79756f53d8c0a88ddd',
-                    },
-                    {
-                        oauth_proxy: 'https://auth-server.herokuapp.com/proxy',
-                    }
-                );
-                hello
-                    .login(provider, {
-                        // display: 'page',
-                        scope: 'repo',
-                        response_type: 'code',
-                        redirect_uri:
-                            'http://localhost:8080/#/redirect',
-                    })
-                    .then((res) => {
-                        console.log(res.authResponse.access_token);
-                        this.$q.localStorage.set('clipbroad-github-token', res.authResponse.access_token);
-                    });
+            Auth() {
+                // Login
             },
             isLogin() {
                 const accessToken = this.$q.localStorage.getItem(
