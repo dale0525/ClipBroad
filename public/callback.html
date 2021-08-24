@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="jquery-3.6.0.min.js"></script>
+        <script>
+            function getQueryStringValue(key) {
+                return decodeURIComponent(
+                    window.location.search.replace(
+                        new RegExp(
+                            '^(?:.*[&\\?]' +
+                                encodeURIComponent(key).replace(
+                                    /[\.\+\*]/g,
+                                    '\\$&'
+                                ) +
+                                '(?:\\=([^&]*))?)?.*$',
+                            'i'
+                        ),
+                        '$1'
+                    )
+                );
+            }
+            $.ajax({
+                type: 'POST',
+                url: 'https://github.logictan.workers.dev/corsproxy/',
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    Accept: 'application/json',
+                },
+                crossDomain: true,
+                data: {
+                    client_id: 'fa79756f53d8c0a88ddd',
+                    client_secret: 'e3e61961e0cba97ac6b93082a72496b56b0d30d5',
+                    code: getQueryStringValue('code'),
+                },
+                success: function (result) {
+                    window.localStorage.setItem(
+                        'clipbroad-github-token',
+                        result.access_token
+                    );
+                    window.close();
+                },
+                error: function (error) {
+                    console.log(error);
+                },
+            });
+        </script>
+    </body>
+</html>

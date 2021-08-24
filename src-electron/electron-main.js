@@ -17,7 +17,7 @@ function createWindow () {
     width: 1000,
     height: 600,
     useContentSize: true,
-    frame: false,
+    // frame: false,
     webPreferences: {
       contextIsolation: true,
       // More info: /quasar-cli/developing-electron-apps/electron-preload-script
