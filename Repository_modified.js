@@ -484,7 +484,7 @@ var Repository = function (_Requestable) {
    }, {
       key: 'commit',
       value: function commit(parent, tree, message, options, cb) {
-         var _this2 = this;
+         // var _this2 = this;
 
          if (typeof options === 'function') {
             cb = options;
@@ -500,7 +500,7 @@ var Repository = function (_Requestable) {
          data = Object.assign({}, options, data);
 
          return this._request('POST', '/repos/' + this.__fullname + '/git/commits', data, cb).then(function (response) {
-            _this2.__currentTree.sha = response.data.sha; // Update latest commit
+            // _this2.__currentTree.sha = response.data.sha; // Update latest commit
             return response;
          });
       }

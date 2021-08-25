@@ -89,3 +89,7 @@ export function setGithub({ commit, state }, accessToken) {
     //         });
     // }
 }
+
+export function updateCurrentTree({ commit }, sha) {
+    commit('updateCurrentTree', sha);
+}

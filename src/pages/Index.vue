@@ -33,7 +33,8 @@
     import { defineComponent } from 'vue';
     import { mapGetters, mapActions } from 'vuex';
     const SparkMD5 = require('spark-md5');
-    let ghSha;
+    let checkClipboardInterval = null;
+    let UploadToGithubInterval = null;
 
     export default defineComponent({
         computed: {
@@ -49,6 +50,8 @@
                 'filterItem',
                 'removeItem',
                 'setItemUploaded',
+                'setGithub',
+                'updateCurrentTree',
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
@@ -250,6 +253,7 @@
                                     type: 'blob',
                                 });
                                 if (treeItems.length == toUpload.length) {
+                                    let ghsha;
                                     this.GetSha()
                                         .then((data) => {
                                             ghsha = data;
@@ -268,6 +272,7 @@
                                             );
                                         })
                                         .then(({ data }) => {
+                                            this.updateCurrentTree(data.sha);
                                             this.githubRepo.updateHead(
                                                 'heads/main',
                                                 data.sha,
@@ -292,7 +297,7 @@
                 }
             },
             GetSha() {
-                return new Promise(function (resolve, reject) {
+                return new Promise((resolve, reject) => {
                     let refSha;
                     let commitSha;
 
@@ -316,13 +321,25 @@
             },
         },
         mounted() {
-            this.updateFromGithub();
-            setInterval(() => {
-                this.checkClipboard();
-            }, 500);
-            setInterval(() => {
-                this.UploadToGithub();
-            }, 10000);
+            const accessToken = this.$q.localStorage.getItem(
+                'clipbroad-github-token'
+            );
+            if (accessToken != null) {
+                this.setGithub(accessToken);
+            }
+            setTimeout(() => {
+                this.updateFromGithub(); //delay for 2 seconds so github can be completed inited
+            }, 2000);
+            if (checkClipboardInterval == null) {
+                checkClipboardInterval = setInterval(() => {
+                    this.checkClipboard();
+                }, 500);
+            }
+            if (UploadToGithubInterval == null) {
+                UploadToGithubInterval = setInterval(() => {
+                    this.UploadToGithub();
+                }, 30000);
+            }
         },
         created() {
             this.setDarkMode();

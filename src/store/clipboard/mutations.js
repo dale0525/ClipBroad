@@ -49,3 +49,7 @@ export function setGithubRepo(state) {
         'ClipBroadHistory'
     );
 }
+
+export function updateCurrentTree(state, sha) {
+    state.githubRepo.__currentTree.sha = sha;
+}
