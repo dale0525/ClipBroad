@@ -3,12 +3,13 @@
         <div class="q-pa-md q-gutter-sm absolute-center">
             <q-btn
                 v-if="!accessToken"
+                transition-hide="jump-down"
                 color="primary"
                 icon="login"
                 label="Login With Github"
                 @click="auth()"
             />
-            <q-item v-ripple>
+            <q-item v-ripple v-if="accessToken" transition-show="jump-up">
                 <q-item-section side>
                     <q-avatar rounded size="48px">
                         <img :src="githubAvaterUrl" />
@@ -16,6 +17,7 @@
                 </q-item-section>
                 <q-item-section>
                     <q-item-label>{{ githubUserName }}</q-item-label>
+                    <q-item-label caption>{{ rateLimit }}</q-item-label>
                 </q-item-section>
             </q-item>
         </div>
@@ -35,12 +37,14 @@
                 accessToken: this.$q.localStorage.getItem(
                     'clipbroad-github-token'
                 ),
+                rateLimit: null,
             };
         },
         computed: {
             ...mapGetters('clipboard', [
                 'githubUserName',
                 'githubAvaterUrl',
+                'github',
             ]),
         },
         methods: {
@@ -53,6 +57,25 @@
             },
             onGetToken() {
                 this.setGithub(this.accessToken);
+            },
+            getRateLimit() {
+                if (this.accessToken == null || this.github == null) {
+                    return;
+                }
+                this.github
+                    .getRateLimit()
+                    .getRateLimit()
+                    .then(({ data }) => {
+                        const currentTime = new Date().getTime();
+                        const resetSecond = parseInt(data.rate.reset - currentTime / 1000);
+                        this.rateLimit =
+                            'Rate Limit: ' +
+                            data.rate.remaining +
+                            ' / ' +
+                            data.rate.limit +
+                            ' Reset in ' +
+                            resetSecond + ' seconds';
+                    });
             },
         },
         mounted() {
@@ -77,6 +100,7 @@
                     this.onGetToken();
                 }
             }, 500);
+            this.getRateLimit();
         },
     };
 </script>

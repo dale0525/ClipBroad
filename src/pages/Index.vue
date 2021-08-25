@@ -167,14 +167,15 @@
                     .then(({ data }) => {
                         for (let i = 0; i < data.length; i++) {
                             ((i) => {
-                                let name = data[i].name;
-                                let nameSplit = name.split('-');
+                                let fullName = data[i].name;
+                                fullName = fullName.split('.');
+                                let nameSplit = fullName[0].split('-');
                                 if (nameSplit.length < 2) return;
-                                let sha = data[i].sha;
                                 let fileType =
-                                    nameSplit.length > 2
-                                        ? nameSplit[2].split('.')[0]
-                                        : 'text';
+                                    fullName.length < 2
+                                        ? 'text'
+                                        : fullName[1]   //name extension as file type
+                                let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
                                 this.githubRepo
                                     .getBlob(sha, raw)
@@ -209,12 +210,14 @@
             UploadToGithub() {
                 let treeItems = [];
                 let toUpload = [];
+                // console.log(this.items);
                 for (let j = 0; j < this.items.length; j++) {
                     if (!this.items[j].uploaded && this.items[j].value != '') {
                         toUpload.push(this.items[j]);
                         this.setItemUploaded(j);
                     }
                 }
+                // console.log(toUpload);
                 if (toUpload.length <= 0) {
                     console.log('no item to upload');
                     return;
@@ -230,7 +233,7 @@
                         let content = toUpload[i].value;
                         switch (toUpload[i].type) {
                             case 'png':
-                                fileName += '-png.png';
+                                fileName += '.png';
                                 content = Buffer.from(content, 'base64');
                                 break;
                             default:

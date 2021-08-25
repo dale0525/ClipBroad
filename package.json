@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@quasar/app": "^3.0.0",
+    "@vue/devtools": "^5.3.4",
     "electron": "^13.2.1"
   },
   "browserslist": [
