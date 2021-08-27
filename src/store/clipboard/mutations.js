@@ -1,5 +1,3 @@
-const GitHub = require('github-api');
-
 export function addItem(state, item) {
     state.items.unshift(item);
     state.items.sort(function (a, b) {
@@ -22,44 +20,4 @@ export function removeItem(state, index) {
 
 export function setItemUploaded(state, index) {
     state.items[index].uploaded = true;
-}
-
-export function setGithub(state, accessToken) {
-    state.github = new GitHub({
-        token: accessToken,
-    });
-}
-
-export function setGithubUser(state) {
-    state.githubUser = state.github.getUser();
-}
-
-export function setGithubUserDetail(state, payload) {
-    state.githubUserName = payload.username;
-    state.githubAvaterUrl = payload.avatarUrl;
-}
-
-export function setGithubRepoExist(state, exist) {
-    state.githubRepoExist = exist;
-}
-
-export function setGithubRepo(state) {
-    state.githubRepo = state.github.getRepo(
-        state.githubUserName,
-        'ClipBroadHistory'
-    );
-}
-
-export function updateCurrentTree(state, sha) {
-    state.githubRepo.__currentTree.sha = sha;
-}
-
-export function logoutGithub(state)
-{
-    state.github = null;
-    state.githubUser = null;
-    state.githubRepo = null;
-    state.githubUserName = null;
-    state.githubAvaterUrl = null;
-    state.githubRepoExist = false;
 }

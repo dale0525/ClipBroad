@@ -3,11 +3,11 @@
         <div class="q-pa-md q-gutter-sm absolute-center">
             <transition
                 appear
-                enter-active-class="animated slideInLeft"
-                leave-active-class="animated fadeOutLeft"
+                enter-active-class="animated fadeInDown"
+                leave-active-class="animated fadeOutUp"
             >
                 <q-btn
-                    v-if="!accessToken"
+                    v-if="showLoginBtn"
                     color="primary"
                     icon="login"
                     label="Login With Github"
@@ -16,18 +16,22 @@
             </transition>
             <transition
                 appear
-                enter-active-class="animated pulse"
+                enter-active-class="animated fadeInUp"
                 leave-active-class="animated fadeOutDown"
             >
-                <q-item v-ripple v-if="accessToken">
-                    <q-item-section side>
+                <q-item v-ripple v-if="!showLoginBtn">
+                    <q-item-section side v-if="githubAvatarUrl">
                         <q-avatar rounded size="48px">
-                            <img :src="githubAvaterUrl" />
+                            <img :src="githubAvatarUrl" />
                         </q-avatar>
                     </q-item-section>
                     <q-item-section>
-                        <q-item-label>{{ githubUserName }}</q-item-label>
-                        <q-item-label caption>{{ rateLimit }}</q-item-label>
+                        <q-item-label v-if="githubUserName">{{
+                            githubUserName
+                        }}</q-item-label>
+                        <q-item-label caption v-if="rateLimit">{{
+                            rateLimit
+                        }}</q-item-label>
                     </q-item-section>
                     <q-menu anchor="center middle" self="center middle">
                         <q-btn color="black" label="Logout" @click="logout()" />
@@ -39,33 +43,37 @@
 </template>
 
 <script>
-    import { openURL, uid } from 'quasar';
-    import { mapGetters, mapActions } from 'vuex';
+    import { openURL, uid, format } from 'quasar';
     const GITHUB_CLIENT_ID = 'fa79756f53d8c0a88ddd';
-    const REPO_NAME = 'ClipBroadHistory';
     let loggin = false;
+    let checkLogginInterval = null;
 
     export default {
         data() {
             return {
-                accessToken: this.$q.localStorage.getItem(
-                    'clipbroad-github-token'
-                ),
-                rateLimit: null,
+                hasToken: false,
             };
         },
         computed: {
-            ...mapGetters('clipboard', [
-                'githubUserName',
-                'githubAvaterUrl',
-                'github',
-            ]),
+            showLoginBtn(){
+                return this.hasToken ? false : true;
+            },
+            githubUserName() {
+                return this.$githubInstance.githubUserName == null
+                    ? ''
+                    : this.$githubInstance.githubUserName;
+            },
+            githubAvatarUrl() {
+                return this.$githubInstance.githubAvatarUrl;
+            },
+            rateLimit() {
+                return this.$githubInstance.rateLimit;
+            },
             // appVisible() {
             //     return this.$q.appVisible;
             // },
         },
         methods: {
-            ...mapActions('clipboard', ['setGithub', 'logoutGithub']),
             auth() {
                 let uuid = uid();
                 this.$q.localStorage.set('clipbroad-github-state', uuid);
@@ -76,87 +84,67 @@
                 );
                 loggin = true;
             },
-            onGetToken() {
-                this.setGithub(this.accessToken);
-                this.getRateLimit();
-            },
-            getRateLimit() {
-                if (this.accessToken == null || this.github == null) {
-                    return;
-                }
-                this.github
-                    .getRateLimit()
-                    .getRateLimit()
-                    .then(({ data }) => {
-                        const currentTime = new Date().getTime();
-                        const resetSecond = parseInt(
-                            data.rate.reset - currentTime / 1000
-                        );
-                        this.rateLimit =
-                            'Rate Limit: ' +
-                            data.rate.remaining +
-                            ' / ' +
-                            data.rate.limit +
-                            ' Reset in ' +
-                            resetSecond +
-                            ' seconds';
-                    });
-            },
+
             logout() {
                 this.$q.localStorage.remove('clipbroad-github-token');
-                this.accessToken = null;
-                this.logoutGithub();
+                this.$githubInstance.github = null;
+                this.$githubInstance.githubUser = null;
+                this.$githubInstance.githubRepo = null;
+                this.$githubInstance.githubUserName = null;
+                this.$githubInstance.githubAvatarUrl = null;
+                this.$githubInstance.rateLimit = null;
+                this.$githubInstance.githubRepoExist = false;
+                this.hasToken = false;
+            },
+            setToken(_token) {
+                this.hasToken = true;
+                loggin = false;
+                this.$setGithub(_token);
             },
         },
         mounted() {
             // this.$q.localStorage.remove('clipbroad-github-token');
-            if (this.accessToken != null) {
-                this.onGetToken();
+            if (this.$q.localStorage.has('clipbroad-github-token')) {
+                this.setToken(
+                    this.$q.localStorage.getItem('clipbroad-github-token')
+                );
             }
             loggin = false;
-            setInterval(() => {
-                if (!loggin) {
-                    return;
-                }
-                // this.accessToken = this.$q.localStorage.getItem(
-                //     'clipbroad-github-token'
-                // );
-                // if (this.accessToken == null) {
-                //     console.log('access token is null');
-                //     return;
-                // } else {
-                //     console.log(`access token is ${this.accessToken}`);
-                //     loggin = false;
-                //     this.onGetToken();
-                // }
-                this.$axios
-                    .post('https://api.logictan.workers.dev/corsproxy/', {
-                        state: this.$q.localStorage.getItem(
-                            'clipbroad-github-state'
-                        ),
-                        // apiurl: 'https://www.logiconsole.com/api/clipbroad/token/',
-                    })
-                    .then(({ data }) => {
-                        if (data.status != 'success') {
-                            console.log(data.message);
-                        } else {
-                            console.log(`access token is ${data.message}`);
-                            this.$q.localStorage.set('clipbroad-github-token', data.message);
-                            this.accessToken = data.message;
-                            loggin = false;
-                            this.onGetToken();
-                        }
-                    }).catch(error=>{
-                        console.log(error);
-                    });
-            }, 2000);
-            this.getRateLimit();
+            if (checkLogginInterval == null) {
+                checkLogginInterval = setInterval(() => {
+                    if (!loggin) {
+                        return;
+                    }
+                    this.$axios
+                        .post('https://api.logictan.workers.dev/corsproxy/', {
+                            state: this.$q.localStorage.getItem(
+                                'clipbroad-github-state'
+                            ),
+                        })
+                        .then(({ data }) => {
+                            if (data.status != 'success') {
+                                console.log(data.message);
+                            } else {
+                                console.log(`access token is ${data.message}`);
+                                this.$q.localStorage.set(
+                                    'clipbroad-github-token',
+                                    data.message
+                                );
+                                this.setToken(data.message);
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }, 2000);
+            }
+            this.$getRateLimit();
         },
-        // watch: {
-        //     appVisible: (val) => {
-        //         console.log(val ? 'app activate' : 'app background');
-        //     },
-        // },
+        watch: {
+            // appVisible: (val) => {
+            //     console.log(val ? 'app activate' : 'app background');
+            // },
+        },
     };
 </script>
 

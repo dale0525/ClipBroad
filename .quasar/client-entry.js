@@ -27,11 +27,13 @@ import '@quasar/extras/material-icons/material-icons.css'
 
 import '@quasar/extras/animate/slideInLeft.css'
 
-import '@quasar/extras/animate/fadeOutLeft.css'
+import '@quasar/extras/animate/fadeInDown.css'
 
-import '@quasar/extras/animate/pulse.css'
+import '@quasar/extras/animate/fadeOutUp.css'
 
 import '@quasar/extras/animate/fadeOutDown.css'
+
+import '@quasar/extras/animate/fadeInUp.css'
 
 
 // We load Quasar stylesheet file
@@ -126,7 +128,9 @@ createQuasarApp(createApp, quasarUserOptions)
   .then(app => {
     return Promise.all([
       
-      import(/* webpackMode: "eager" */ 'boot/axios')
+      import(/* webpackMode: "eager" */ 'boot/axios'),
+      
+      import(/* webpackMode: "eager" */ 'boot/github')
       
     ]).then(bootFiles => {
       const boot = bootFiles

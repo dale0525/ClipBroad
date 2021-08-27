@@ -37,18 +37,14 @@
 
 <script>
     import { defineComponent } from 'vue';
-    import { mapGetters, mapActions } from 'vuex';
+    import { mapState, mapActions } from 'vuex';
     const SparkMD5 = require('spark-md5');
     let checkClipboardInterval = null;
     let UploadToGithubInterval = null;
 
     export default defineComponent({
         computed: {
-            ...mapGetters('clipboard', [
-                'items',
-                'githubRepo',
-                'githubRepoExist',
-            ]),
+            ...mapState('clipboard', ['items']),
         },
         methods: {
             ...mapActions('clipboard', [
@@ -56,8 +52,6 @@
                 'filterItem',
                 'removeItem',
                 'setItemUploaded',
-                'setGithub',
-                'updateCurrentTree',
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
@@ -168,11 +162,11 @@
             },
             updateFromGithub() {
                 console.log('updating from github...');
-                if (!this.githubRepoExist) {
+                if (!this.$githubInstance.githubRepoExist) {
                     console.log('github repo does not exist');
                     return;
                 }
-                this.githubRepo
+                this.$githubInstance.githubRepo
                     .getContents('main', '', true)
                     .then(({ data }) => {
                         for (let i = 0; i < data.length; i++) {
@@ -185,7 +179,7 @@
                                     fullName.length < 2 ? 'text' : fullName[1]; //name extension as file type
                                 let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
-                                this.githubRepo
+                                this.$githubInstance.githubRepo
                                     .getBlob(sha, raw)
                                     .then(({ data }) => {
                                         let dataValue =
@@ -217,7 +211,7 @@
             },
             UploadToGithub() {
                 console.log('uploading to github');
-                if (!this.githubRepoExist) {
+                if (!this.$githubInstance.githubRepoExist) {
                     console.log('github repo does not exist');
                     return;
                 }
@@ -259,7 +253,7 @@
                         // );
                         // fs.writeFileSync(filePath, toUpload[i].value);
                         // console.log("file saved");
-                        this.githubRepo
+                        this.$githubInstance.githubRepo
                             .createBlob(content)
                             .then(({ data }) => {
                                 treeItems.push({
@@ -275,21 +269,20 @@
                                             ghsha = data;
                                         })
                                         .then(() =>
-                                            this.githubRepo.createTree(
+                                            this.$githubInstance.githubRepo.createTree(
                                                 treeItems,
                                                 ghsha.commit
                                             )
                                         )
                                         .then(({ data }) => {
-                                            return this.githubRepo.commit(
+                                            return this.$githubInstance.githubRepo.commit(
                                                 ghsha.parent,
                                                 data.sha,
                                                 'update'
                                             );
                                         })
                                         .then(({ data }) => {
-                                            this.updateCurrentTree(data.sha);
-                                            this.githubRepo.updateHead(
+                                            this.$githubInstance.githubRepo.updateHead(
                                                 'heads/main',
                                                 data.sha,
                                                 true
@@ -317,12 +310,12 @@
                     let refSha;
                     let commitSha;
 
-                    this.githubRepo
+                    this.$githubInstance.githubRepo
                         .getRef('heads/main')
                         .then(({ data }) => {
                             refSha = data.object.sha;
                         })
-                        .then(() => this.githubRepo.getCommit(refSha))
+                        .then(() => this.$githubInstance.githubRepo.getCommit(refSha))
                         .then(({ data }) => {
                             commitSha = data.tree.sha;
                             return resolve({
@@ -337,11 +330,10 @@
             },
         },
         mounted() {
-            const accessToken = this.$q.localStorage.getItem(
-                'clipbroad-github-token'
-            );
-            if (accessToken != null) {
-                this.setGithub(accessToken);
+            if (this.$q.localStorage.has('clipbroad-github-token')) {
+                this.$setGithub(
+                    this.$q.localStorage.getItem('clipbroad-github-token')
+                );
             }
             setTimeout(() => {
                 this.updateFromGithub(); //delay for 2 seconds so github can be completed inited
