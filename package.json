@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "github-api": "^3.4.0",
     "node-polyfill-webpack-plugin": "^1.1.4",
@@ -20,7 +21,8 @@
   "devDependencies": {
     "@quasar/app": "^3.0.0",
     "@vue/devtools": "^5.3.4",
-    "electron": "^13.2.1"
+    "electron": "^13.2.1",
+    "electron-packager": "^15.3.0"
   },
   "browserslist": [
     "last 10 Chrome versions",

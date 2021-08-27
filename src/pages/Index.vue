@@ -1,30 +1,36 @@
 <template>
     <q-page class="q-pa-md">
         <q-list bordered separator>
-            <q-item
-                v-for="(item, index) in items"
-                :key="index"
-                clickable
-                v-ripple
-                @dblclick="copyItem(index)"
+            <transition-group
+                appear
+                enter-active-class="animated slideInLeft"
+                leave-active-class="animated fadeOutLeft"
             >
-                <q-item-section avatar>
-                    <q-icon color="primary" :name="itemIcon(item.type)" />
-                </q-item-section>
-                <q-item-section v-if="item.type == 'text'">
-                    <q-item-label lines="3">{{ item.value }}</q-item-label>
-                </q-item-section>
-                <q-item-section v-if="item.type == 'png'"
-                    ><img
-                        :src="'data:image/png;base64,' + item.value"
-                        style="max-height: 300px; object-fit: contain"
-                /></q-item-section>
-                <q-item-section side>
-                    <q-item-label caption>{{
-                        prevTime(item.time)
-                    }}</q-item-label>
-                </q-item-section>
-            </q-item>
+                <q-item
+                    v-for="(item, index) in items"
+                    :key="index"
+                    clickable
+                    v-ripple
+                    @dblclick="copyItem(index)"
+                >
+                    <q-item-section avatar>
+                        <q-icon color="primary" :name="itemIcon(item.type)" />
+                    </q-item-section>
+                    <q-item-section v-if="item.type == 'text'">
+                        <q-item-label lines="3">{{ item.value }}</q-item-label>
+                    </q-item-section>
+                    <q-item-section v-if="item.type == 'png'"
+                        ><img
+                            :src="'data:image/png;base64,' + item.value"
+                            style="max-height: 300px; object-fit: contain"
+                    /></q-item-section>
+                    <q-item-section side>
+                        <q-item-label caption>{{
+                            prevTime(item.time)
+                        }}</q-item-label>
+                    </q-item-section>
+                </q-item>
+            </transition-group>
         </q-list>
     </q-page>
 </template>
@@ -144,6 +150,7 @@
                 const item = this.items[index];
                 this.removeItem(index);
                 item.time = new Date().getTime();
+                item.uploaded = false;
                 this.addItem(item);
                 if (this.$q.platform.is.electron) {
                     if (item.type == 'text') {
@@ -161,7 +168,10 @@
             },
             updateFromGithub() {
                 console.log('updating from github...');
-                if (!this.githubRepoExist) return;
+                if (!this.githubRepoExist) {
+                    console.log('github repo does not exist');
+                    return;
+                }
                 this.githubRepo
                     .getContents('main', '', true)
                     .then(({ data }) => {
@@ -172,9 +182,7 @@
                                 let nameSplit = fullName[0].split('-');
                                 if (nameSplit.length < 2) return;
                                 let fileType =
-                                    fullName.length < 2
-                                        ? 'text'
-                                        : fullName[1]   //name extension as file type
+                                    fullName.length < 2 ? 'text' : fullName[1]; //name extension as file type
                                 let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
                                 this.githubRepo
@@ -208,6 +216,11 @@
                     });
             },
             UploadToGithub() {
+                console.log('uploading to github');
+                if (!this.githubRepoExist) {
+                    console.log('github repo does not exist');
+                    return;
+                }
                 let treeItems = [];
                 let toUpload = [];
                 // console.log(this.items);
@@ -341,7 +354,7 @@
             if (UploadToGithubInterval == null) {
                 UploadToGithubInterval = setInterval(() => {
                     this.UploadToGithub();
-                }, 30000);
+                }, 10000);
             }
         },
         created() {

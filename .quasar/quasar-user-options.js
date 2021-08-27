@@ -12,7 +12,7 @@
 
 
 
-import {LocalStorage} from 'quasar'
+import {LocalStorage,AppVisibility} from 'quasar'
 
 
-export default { config: {},plugins: {LocalStorage} }
+export default { config: {},plugins: {LocalStorage,AppVisibility} }

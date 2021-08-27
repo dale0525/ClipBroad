@@ -53,3 +53,13 @@ export function setGithubRepo(state) {
 export function updateCurrentTree(state, sha) {
     state.githubRepo.__currentTree.sha = sha;
 }
+
+export function logoutGithub(state)
+{
+    state.github = null;
+    state.githubUser = null;
+    state.githubRepo = null;
+    state.githubUserName = null;
+    state.githubAvaterUrl = null;
+    state.githubRepoExist = false;
+}
