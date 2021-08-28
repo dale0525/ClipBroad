@@ -15,7 +15,13 @@
  *     doAThing: () => {}
  *   })
  */
-const { clipboard, contextBridge, nativeImage, remote } = require('electron');
+const {
+    clipboard,
+    contextBridge,
+    nativeImage,
+    remote,
+    ipcRenderer,
+} = require('electron');
 contextBridge.exposeInMainWorld('myAPI', {
     readClipboardText: () => {
         return clipboard.readText();
@@ -25,14 +31,22 @@ contextBridge.exposeInMainWorld('myAPI', {
     },
     readClipboardImage: () => {
         const image = clipboard.readImage();
-        return image.isEmpty() ? null : image.toPNG().toString("base64");
+        return image.isEmpty() ? null : image.toPNG().toString('base64');
     },
     writeClipboardImage: (imageString) => {
-        const buffer = Buffer.from(imageString, "base64");
+        const buffer = Buffer.from(imageString, 'base64');
         const image = nativeImage.createFromBuffer(buffer);
         clipboard.writeImage(image);
     },
     isDarkMode: () => {
         return remote.nativeTheme.shouldUseDarkColors;
     },
+    hideWindow: () => {
+        ipcRenderer.send('hideWindow');
+    },
+});
+
+ipcRenderer.on('Sync', () => {
+    var evt = new CustomEvent('Sync');
+    window.dispatchEvent(evt);
 });

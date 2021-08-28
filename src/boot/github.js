@@ -12,98 +12,161 @@ let githubInstance = {
 const REPO_NAME = 'ClipBroadHistory';
 
 const setGithub = (_token) => {
-    if (githubInstance.github == null) {
-        githubInstance.github = new GitHub({
-            token: _token,
-        });
-        getRateLimit();
-    }
-    setGithubUser();
+    return new Promise((resolve, reject) => {
+        if (githubInstance.github == null) {
+            githubInstance.github = new GitHub({
+                token: _token,
+            });
+        }
+        setGithubUser()
+            .then((data) => {
+                resolve(data);
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
 };
 const setGithubUser = () => {
-    if (githubInstance.github != null) {
-        if (githubInstance.githubUser == null) {
-            githubInstance.githubUser = githubInstance.github.getUser();
+    return new Promise((resolve, reject) => {
+        if (githubInstance.github != null) {
+            if (githubInstance.githubUser == null) {
+                githubInstance.githubUser = githubInstance.github.getUser();
+            }
+            if (githubInstance.githubUserName == null) {
+                githubInstance.githubUser
+                    .getProfile()
+                    .then(({ data }) => {
+                        githubInstance.githubUserName = data.login;
+                        githubInstance.githubAvatarUrl = data.avatar_url;
+                    })
+                    .then(setGithubRepo)
+                    .then((data) => {
+                        resolve(data);
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+            } else {
+                setGithubRepo().then((data) => {
+                    resolve(data);
+                });
+            }
+        } else {
+            reject({
+                status: 'error',
+                data: 'Github not inited',
+            });
+        }
+    });
+};
+const setGithubRepo = () => {
+    return new Promise((resolve, reject) => {
+        if (githubInstance.githubUserName != null) {
+            if (
+                githubInstance.githubRepo == null ||
+                !githubInstance.githubRepoExist
+            ) {
+                githubInstance.githubRepo = githubInstance.github.getRepo(
+                    githubInstance.githubUserName,
+                    REPO_NAME
+                );
+                githubInstance.githubRepo
+                    .getDetails()
+                    .then(() => {
+                        githubInstance.githubRepoExist = true;
+                        resolve({
+                            status: 'success',
+                            data: {
+                                username: githubInstance.githubUserName,
+                                avatarUrl: githubInstance.githubAvatarUrl,
+                            },
+                        });
+                    })
+                    .catch(() => {
+                        console.log('Repo is not inited, create one');
+                        createGithubRepo()
+                            .then((data) => {
+                                resolve(data);
+                            })
+                            .catch((error) => console.log(error));
+                    });
+            } else {
+                resolve({
+                    status: 'success',
+                    data: {
+                        username: githubInstance.githubUserName,
+                        avatarUrl: githubInstance.githubAvatarUrl,
+                    },
+                });
+            }
+        } else {
+            reject({
+                status: 'error',
+                data: 'Github Username not inited',
+            });
+        }
+    });
+};
+const createGithubRepo = () => {
+    return new Promise((resolve, reject) => {
+        if (githubInstance.githubUser != null) {
             githubInstance.githubUser
-                .getProfile()
-                .then(({ data }) => {
-                    githubInstance.githubUserName = data.login;
-                    githubInstance.githubAvatarUrl = data.avatar_url;
+                .createRepo({
+                    name: REPO_NAME,
+                    private: true,
+                    has_projects: false,
+                    has_wiki: false,
+                    auto_init: true,
+                })
+                .then(() => {
+                    githubInstance.githubRepoExist = true;
                     setGithubRepo();
+                })
+                .then((data) => {
+                    resolve(data);
                 })
                 .catch((error) => {
                     console.log(error);
                 });
-        }
-    } else {
-        setGithub();
-    }
-};
-const setGithubRepo = () => {
-    if (githubInstance.githubUserName != null) {
-        if (
-            githubInstance.githubRepo == null ||
-            !githubInstance.githubRepoExist
-        ) {
-            githubInstance.githubRepo = githubInstance.github.getRepo(
-                githubInstance.githubUserName,
-                REPO_NAME
-            );
-            githubInstance.githubRepo
-                .getDetails()
-                .then(() => {
-                    githubInstance.githubRepoExist = true;
-                })
-                .catch(() => {
-                    console.log('Repo is not inited, create one');
-                    createGithubRepo();
-                });
-        }
-    } else {
-        setGithubUser();
-    }
-};
-const createGithubRepo = () => {
-    if (githubInstance.githubUser != null) {
-        githubInstance.githubUser
-            .createRepo({
-                name: REPO_NAME,
-                private: true,
-                has_projects: false,
-                has_wiki: false,
-                auto_init: true,
-            })
-            .then(() => {
-                githubInstance.githubRepoExist = true;
-                setGithubRepo();
-            })
-            .catch((error) => {
-                console.log(error);
+        } else {
+            reject({
+                status: 'error',
+                data: 'Github User not inited',
             });
-    } else {
-        setGithubUser();
-    }
+        }
+    });
 };
 
 const getRateLimit = () => {
-    if (githubInstance.github == null) {
-        return;
-    }
-    githubInstance.github
-        .getRateLimit()
-        .getRateLimit()
-        .then(({ data }) => {
-            const currentTime = new Date().getTime();
-            const resetSecond = parseInt(data.rate.reset - currentTime / 1000);
-            githubInstance.rateLimit =
-                'Rate Limit: ' +
-                data.rate.remaining +
-                ' / ' +
-                data.rate.limit +
-                ' Reset in ' +
-                resetSecond +
-                ' seconds';
-        });
+    return new Promise((resolve, reject) => {
+        if (githubInstance.github == null) {
+            reject({ status: 'error', message: 'Github not inited' });
+        }
+        githubInstance.github
+            .getRateLimit()
+            .getRateLimit()
+            .then(({ data }) => {
+                const currentTime = new Date().getTime();
+                const resetSecond = parseInt(
+                    data.rate.reset - currentTime / 1000
+                );
+                resolve({
+                    status: 'success',
+                    message: {
+                        current: data.rate.remaining,
+                        limit: data.rate.limit,
+                        time: resetSecond,
+                    },
+                });
+            })
+            .catch((error) => {
+                reject({
+                    status: 'error',
+                    message: error,
+                });
+            });
+    });
 };
 
 // "async" is optional;

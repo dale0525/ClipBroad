@@ -39,8 +39,8 @@
     import { defineComponent } from 'vue';
     import { mapState, mapActions } from 'vuex';
     const SparkMD5 = require('spark-md5');
-    let checkClipboardInterval = null;
-    let UploadToGithubInterval = null;
+    var timers = [];
+    var existEventListen = false;
 
     export default defineComponent({
         computed: {
@@ -152,6 +152,7 @@
                     } else if (item.type == 'png') {
                         window.myAPI.writeClipboardImage(item.value);
                     }
+                    window.myAPI.hideWindow();
                 }
             },
             setDarkMode() {
@@ -210,100 +211,108 @@
                     });
             },
             UploadToGithub() {
-                console.log('uploading to github');
-                if (!this.$githubInstance.githubRepoExist) {
-                    console.log('github repo does not exist');
-                    return;
-                }
-                let treeItems = [];
-                let toUpload = [];
-                // console.log(this.items);
-                for (let j = 0; j < this.items.length; j++) {
-                    if (!this.items[j].uploaded && this.items[j].value != '') {
-                        toUpload.push(this.items[j]);
-                        this.setItemUploaded(j);
+                return new Promise((resolve, reject) => {
+                    console.log('uploading to github');
+                    if (!this.$githubInstance.githubRepoExist) {
+                        console.log('github repo does not exist');
+                        return;
                     }
-                }
-                // console.log(toUpload);
-                if (toUpload.length <= 0) {
-                    console.log('no item to upload');
-                    return;
-                }
-                // const tempPath = path.join(remote.app.getPath("temp"), "clipbroad");
-                // if (!fs.existsSync(tempPath)) {
-                //     fs.mkdirSync(tempPath);
-                // }
-                for (var i = 0; i < toUpload.length; i++) {
-                    ((i) => {
-                        let fileName =
-                            toUpload[i].time.toString() + '-' + toUpload[i].md5;
-                        let content = toUpload[i].value;
-                        switch (toUpload[i].type) {
-                            case 'png':
-                                fileName += '.png';
-                                content = Buffer.from(content, 'base64');
-                                break;
-                            default:
-                                fileName += '-text';
-                                break;
+                    let treeItems = [];
+                    let toUpload = [];
+                    // console.log(this.items);
+                    for (let j = 0; j < this.items.length; j++) {
+                        if (
+                            !this.items[j].uploaded &&
+                            this.items[j].value != ''
+                        ) {
+                            toUpload.push(this.items[j]);
+                            this.setItemUploaded(j);
                         }
-                        // filePath = path.join(
-                        //     tempPath,
-                        //     fileName,
-                        // );
-                        // fs.writeFileSync(filePath, toUpload[i].value);
-                        // console.log("file saved");
-                        this.$githubInstance.githubRepo
-                            .createBlob(content)
-                            .then(({ data }) => {
-                                treeItems.push({
-                                    sha: data.sha,
-                                    path: fileName,
-                                    mode: '100644',
-                                    type: 'blob',
-                                });
-                                if (treeItems.length == toUpload.length) {
-                                    let ghsha;
-                                    this.GetSha()
-                                        .then((data) => {
-                                            ghsha = data;
-                                        })
-                                        .then(() =>
-                                            this.$githubInstance.githubRepo.createTree(
-                                                treeItems,
-                                                ghsha.commit
+                    }
+                    // console.log(toUpload);
+                    if (toUpload.length <= 0) {
+                        console.log('no item to upload');
+                        resolve();
+                        return;
+                    }
+                    // const tempPath = path.join(remote.app.getPath("temp"), "clipbroad");
+                    // if (!fs.existsSync(tempPath)) {
+                    //     fs.mkdirSync(tempPath);
+                    // }
+                    for (var i = 0; i < toUpload.length; i++) {
+                        ((i) => {
+                            let fileName =
+                                toUpload[i].time.toString() +
+                                '-' +
+                                toUpload[i].md5;
+                            let content = toUpload[i].value;
+                            switch (toUpload[i].type) {
+                                case 'png':
+                                    fileName += '.png';
+                                    content = Buffer.from(content, 'base64');
+                                    break;
+                                default:
+                                    fileName += '-text';
+                                    break;
+                            }
+                            // filePath = path.join(
+                            //     tempPath,
+                            //     fileName,
+                            // );
+                            // fs.writeFileSync(filePath, toUpload[i].value);
+                            // console.log("file saved");
+                            this.$githubInstance.githubRepo
+                                .createBlob(content)
+                                .then(({ data }) => {
+                                    treeItems.push({
+                                        sha: data.sha,
+                                        path: fileName,
+                                        mode: '100644',
+                                        type: 'blob',
+                                    });
+                                    if (treeItems.length == toUpload.length) {
+                                        let ghsha;
+                                        this.GetSha()
+                                            .then((data) => {
+                                                ghsha = data;
+                                            })
+                                            .then(() =>
+                                                this.$githubInstance.githubRepo.createTree(
+                                                    treeItems,
+                                                    ghsha.commit
+                                                )
                                             )
-                                        )
-                                        .then(({ data }) => {
-                                            return this.$githubInstance.githubRepo.commit(
-                                                ghsha.parent,
-                                                data.sha,
-                                                'update'
-                                            );
-                                        })
-                                        .then(({ data }) => {
-                                            this.$githubInstance.githubRepo.updateHead(
-                                                'heads/main',
-                                                data.sha,
-                                                true
-                                            );
-                                        })
-                                        .then(() => {
-                                            console.log('Upload complete');
-                                            // fs.rmdir(tempPath, { recursive: true, force: true }, () => {
-                                            //     console.log("dir deleted");
-                                            // });
-                                        })
-                                        .catch((error) => {
-                                            console.log(error);
-                                        });
-                                }
-                            })
-                            .catch((error) => {
-                                console.log(error);
-                            });
-                    })(i);
-                }
+                                            .then(({ data }) => {
+                                                return this.$githubInstance.githubRepo.commit(
+                                                    ghsha.parent,
+                                                    data.sha,
+                                                    'update'
+                                                );
+                                            })
+                                            .then(({ data }) => {
+                                                this.$githubInstance.githubRepo.updateHead(
+                                                    'heads/main',
+                                                    data.sha,
+                                                    true
+                                                );
+                                            })
+                                            .then(() => {
+                                                console.log('Upload complete');
+                                                resolve();
+                                            })
+                                            .catch((error) => {
+                                                console.log(error);
+                                                reject();
+                                            });
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                    reject();
+                                });
+                        })(i);
+                    }
+                });
             },
             GetSha() {
                 return new Promise((resolve, reject) => {
@@ -315,7 +324,9 @@
                         .then(({ data }) => {
                             refSha = data.object.sha;
                         })
-                        .then(() => this.$githubInstance.githubRepo.getCommit(refSha))
+                        .then(() =>
+                            this.$githubInstance.githubRepo.getCommit(refSha)
+                        )
                         .then(({ data }) => {
                             commitSha = data.tree.sha;
                             return resolve({
@@ -328,29 +339,50 @@
                         });
                 });
             },
+            resetTimer() {
+                timers.forEach((item, index) => {
+                    clearInterval(item);
+                });
+                timers = [];
+                const checkClipboardInterval = setInterval(
+                    this.checkClipboard,
+                    500
+                );
+                const UploadToGithubInterval = setInterval(
+                    this.UploadToGithub,
+                    30000
+                );
+                timers.push(checkClipboardInterval);
+                timers.push(UploadToGithubInterval);
+            },
+            syncNow() {
+                if (!this.$githubInstance.githubRepoExist) {
+                    this.$router.push('/settings');
+                } else {
+                    this.UploadToGithub().then(() => {
+                        this.updateFromGithub();
+                    });
+                }
+            },
         },
         mounted() {
             if (this.$q.localStorage.has('clipbroad-github-token')) {
                 this.$setGithub(
                     this.$q.localStorage.getItem('clipbroad-github-token')
-                );
+                )
+                    .then(() => {
+                        this.updateFromGithub();
+                    })
+                    .catch(() => {});
             }
-            setTimeout(() => {
-                this.updateFromGithub(); //delay for 2 seconds so github can be completed inited
-            }, 2000);
-            if (checkClipboardInterval == null) {
-                checkClipboardInterval = setInterval(() => {
-                    this.checkClipboard();
-                }, 500);
-            }
-            if (UploadToGithubInterval == null) {
-                UploadToGithubInterval = setInterval(() => {
-                    this.UploadToGithub();
-                }, 10000);
-            }
+            this.resetTimer();
         },
         created() {
             this.setDarkMode();
+            if (!existEventListen) {
+                window.addEventListener('Sync', this.syncNow);
+                existEventListen = true;
+            }
         },
     });
 </script>

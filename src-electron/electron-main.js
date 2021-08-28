@@ -1,60 +1,111 @@
-import { app, BrowserWindow, nativeTheme } from 'electron'
-import path from 'path'
+import { app, BrowserWindow, nativeTheme, Tray, Menu, ipcMain } from 'electron';
+import path from 'path';
 
 try {
-  if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
-    require('fs').unlinkSync(require('path').join(app.getPath('userData'), 'DevTools Extensions'))
-  }
-} catch (_) { }
-
-let mainWindow
-
-function createWindow () {
-  /**
-   * Initial window options
-   */
-  mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    useContentSize: true,
-    frame: false,
-    webPreferences: {
-      contextIsolation: true,
-      // More info: /quasar-cli/developing-electron-apps/electron-preload-script
-      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
-      enableRemoteModule: true,
+    if (
+        process.platform === 'win32' &&
+        nativeTheme.shouldUseDarkColors === true
+    ) {
+        require('fs').unlinkSync(
+            require('path').join(app.getPath('userData'), 'DevTools Extensions')
+        );
     }
-  })
+    if (process.env.PROD) {
+        global.__statics = __dirname;
+    }
+} catch (_) {}
 
-  mainWindow.setMenu(null)
+let mainWindow;
+let tray = null;
+let contextMenu = null;
 
-  mainWindow.loadURL(process.env.APP_URL)
+function createWindow() {
+    /**
+     * Initial window options
+     */
+    mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 600,
+        useContentSize: true,
+        frame: false,
+        webPreferences: {
+            contextIsolation: true,
+            // More info: /quasar-cli/developing-electron-apps/electron-preload-script
+            preload: path.resolve(
+                __dirname,
+                process.env.QUASAR_ELECTRON_PRELOAD
+            ),
+            enableRemoteModule: true,
+        },
+    });
 
-  // if (process.env.DEBUGGING) {
-    // if on DEV or Production with debug enabled
-    mainWindow.webContents.openDevTools()
-  // } else {
-  //   // we're on production; no access to devtools pls
-  //   mainWindow.webContents.on('devtools-opened', () => {
-  //     mainWindow.webContents.closeDevTools()
-  //   })
-  // }
+    mainWindow.setMenu(null);
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
-  })
+    mainWindow.loadURL(process.env.APP_URL);
+
+    if (process.env.DEBUGGING) {
+        // if on DEV or Production with debug enabled
+        mainWindow.webContents.openDevTools();
+    } else {
+        // we're on production; no access to devtools pls
+        mainWindow.webContents.on('devtools-opened', () => {
+            mainWindow.webContents.closeDevTools();
+        });
+    }
+
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
 }
 
-app.on('ready', createWindow)
+app.on('ready', () => {
+    createWindow();
+    // tray = new Tray(require('path').resolve(__statics, 'favicon-16x16.png'));
+    const path = process.env.PROD
+        ? require('path').resolve(__statics, 'tray-icon.png')
+        : require('path').join(__dirname, 'icons/icon-dev.png');
+    tray = new Tray(path);
+    contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Sync Now',
+            click: () => {
+                mainWindow.webContents.send('Sync');
+            },
+        },
+        {
+            label: 'Quit',
+            click: () => {
+                app.quit();
+            },
+        },
+    ]);
+
+    tray.setToolTip('ClipBroad');
+	tray.setIgnoreDoubleClickEvents(true);
+    tray.on('right-click', () => {
+        tray.popUpContextMenu(contextMenu);
+    });
+    tray.on('click', (e) => {
+        if (mainWindow.isVisible()) {
+            mainWindow.hide();
+        } else {
+            mainWindow.show();
+        }
+    });
+});
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
 
 app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
+    if (mainWindow === null) {
+        createWindow();
+    }
+});
+
+ipcMain.on('hideWindow', () => {
+    mainWindow.hide();
+});

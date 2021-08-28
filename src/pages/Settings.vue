@@ -20,17 +20,23 @@
                 leave-active-class="animated fadeOutDown"
             >
                 <q-item v-ripple v-if="!showLoginBtn">
-                    <q-item-section side v-if="githubAvatarUrl">
+                    <q-item-section side v-if="avatarUrl != ''">
                         <q-avatar rounded size="48px">
-                            <img :src="githubAvatarUrl" />
+                            <img :src="avatarUrl" />
                         </q-avatar>
                     </q-item-section>
                     <q-item-section>
-                        <q-item-label v-if="githubUserName">{{
-                            githubUserName
+                        <q-item-label v-if="username != ''">{{
+                            username
                         }}</q-item-label>
                         <q-item-label caption v-if="rateLimit">{{
-                            rateLimit
+                            'Limit: ' +
+                            rateLimit.current +
+                            ' / ' +
+                            rateLimit.limit
+                        }}</q-item-label>
+                        <q-item-label caption v-if="rateLimit">{{
+                            'Reset in: ' + rateLimit.time + 's'
                         }}</q-item-label>
                     </q-item-section>
                     <q-menu anchor="center middle" self="center middle">
@@ -44,30 +50,28 @@
 
 <script>
     import { openURL, uid, format } from 'quasar';
+    import { ref } from 'vue';
     const GITHUB_CLIENT_ID = 'fa79756f53d8c0a88ddd';
-    let loggin = false;
     let checkLogginInterval = null;
+    let loggin = false;
+    let hasToken = ref(false);
+    let username = ref('');
+    let avatarUrl = ref('');
+    let rateLimit = ref(null);
 
     export default {
-        data() {
-            return {
-                hasToken: false,
-            };
-        },
         computed: {
-            showLoginBtn(){
-                return this.hasToken ? false : true;
+            showLoginBtn() {
+                return hasToken.value ? false : true;
             },
-            githubUserName() {
-                return this.$githubInstance.githubUserName == null
-                    ? ''
-                    : this.$githubInstance.githubUserName;
+            username() {
+                return username.value;
             },
-            githubAvatarUrl() {
-                return this.$githubInstance.githubAvatarUrl;
+            avatarUrl() {
+                return avatarUrl.value;
             },
             rateLimit() {
-                return this.$githubInstance.rateLimit;
+                return rateLimit.value;
             },
             // appVisible() {
             //     return this.$q.appVisible;
@@ -94,12 +98,17 @@
                 this.$githubInstance.githubAvatarUrl = null;
                 this.$githubInstance.rateLimit = null;
                 this.$githubInstance.githubRepoExist = false;
-                this.hasToken = false;
+                hasToken.value = false;
             },
             setToken(_token) {
-                this.hasToken = true;
+                hasToken.value = true;
                 loggin = false;
-                this.$setGithub(_token);
+                this.$setGithub(_token)
+                    .then(({ data }) => {
+                        username.value = data.username;
+                        avatarUrl.value = data.avatarUrl;
+                    })
+                    .catch(() => {});
             },
         },
         mounted() {
@@ -138,7 +147,11 @@
                         });
                 }, 2000);
             }
-            this.$getRateLimit();
+            this.$getRateLimit()
+                .then(({ message }) => {
+                    rateLimit.value = message;
+                })
+                .catch((error) => {});
         },
         watch: {
             // appVisible: (val) => {
