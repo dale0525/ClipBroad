@@ -44,6 +44,12 @@ contextBridge.exposeInMainWorld('myAPI', {
     hideWindow: () => {
         ipcRenderer.send('hideWindow');
     },
+    showNotification: (title, caption = null)=>{
+        new Notification(title, { body: caption });
+    },
+    setHideIcon: (hide)=>{
+        ipcRenderer.send('hideIcon', hide);
+    }
 });
 
 ipcRenderer.on('Sync', () => {

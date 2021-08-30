@@ -1,4 +1,12 @@
-import { app, BrowserWindow, nativeTheme, Tray, Menu, ipcMain } from 'electron';
+import {
+    app,
+    BrowserWindow,
+    nativeTheme,
+    Tray,
+    Menu,
+    ipcMain,
+    globalShortcut,
+} from 'electron';
 import path from 'path';
 
 try {
@@ -81,7 +89,7 @@ app.on('ready', () => {
     ]);
 
     tray.setToolTip('ClipBroad');
-	tray.setIgnoreDoubleClickEvents(true);
+    tray.setIgnoreDoubleClickEvents(true);
     tray.on('right-click', () => {
         tray.popUpContextMenu(contextMenu);
     });
@@ -91,6 +99,14 @@ app.on('ready', () => {
         } else {
             mainWindow.show();
         }
+    });
+
+    if (process.platform === 'win32') {
+        app.setAppUserModelId(app.name);
+    }
+
+    globalShortcut.register('CommandOrControl+Shift+C', () => {
+        mainWindow.show();
     });
 });
 
@@ -106,6 +122,18 @@ app.on('activate', () => {
     }
 });
 
+app.on('browser-window-blur', () => {
+    mainWindow.hide();
+});
+
 ipcMain.on('hideWindow', () => {
     mainWindow.hide();
+});
+
+ipcMain.on('hideIcon', (e, hide) => {
+    if (hide) {
+        app.dock.hide();
+    } else {
+        app.dock.show();
+    }
 });

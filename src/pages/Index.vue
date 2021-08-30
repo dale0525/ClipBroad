@@ -101,7 +101,7 @@
                     return (
                         seconds.toString() +
                         ' second' +
-                        (seconds < 1 ? '' : 's') +
+                        (seconds < 2 ? '' : 's') +
                         ' ago'
                     );
                 } else if (seconds < 3600) {
@@ -109,7 +109,7 @@
                     return (
                         minutes.toString() +
                         ' minute' +
-                        (minutes < 1 ? '' : 's') +
+                        (minutes < 2 ? '' : 's') +
                         ' ago'
                     );
                 } else if (seconds < 3600 * 24) {
@@ -117,7 +117,7 @@
                     return (
                         hours.toString() +
                         ' hour' +
-                        (hours < 1 ? '' : 's') +
+                        (hours < 2 ? '' : 's') +
                         ' ago'
                     );
                 } else {
@@ -125,7 +125,7 @@
                     return (
                         days.toString() +
                         ' day' +
-                        (days < 1 ? '' : 's') +
+                        (days < 2 ? '' : 's') +
                         ' ago'
                     );
                 }
@@ -149,8 +149,10 @@
                 if (this.$q.platform.is.electron) {
                     if (item.type == 'text') {
                         window.myAPI.writeClipboardText(item.value);
+                        window.myAPI.showNotification('Item copied!', item.value);
                     } else if (item.type == 'png') {
                         window.myAPI.writeClipboardImage(item.value);
+                        window.myAPI.showNotification('Item copied!');
                     }
                     window.myAPI.hideWindow();
                 }
@@ -382,6 +384,10 @@
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow);
                 existEventListen = true;
+            }
+            let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon') ? this.$q.localStorage.getItem('clipbroad-hide-icon') : true;
+            if (this.$q.platform.is.electron) {
+                window.myAPI.setHideIcon(hideIcon);
             }
         },
     });

@@ -44,12 +44,23 @@
                     </q-menu>
                 </q-item>
             </transition>
+
+            <q-separator />
+
+            <q-toggle
+                v-model="hideIcon"
+                checked-icon="check"
+                color="green"
+                unchecked-icon="clear"
+                label="Hide Dock Icon"
+                left-label
+            />
         </div>
     </q-page>
 </template>
 
 <script>
-    import { openURL, uid, format } from 'quasar';
+    import { openURL, uid } from 'quasar';
     import { ref } from 'vue';
     const GITHUB_CLIENT_ID = 'fa79756f53d8c0a88ddd';
     let checkLogginInterval = null;
@@ -60,6 +71,11 @@
     let rateLimit = ref(null);
 
     export default {
+        data() {
+            return {
+                hideIcon: true,
+            };
+        },
         computed: {
             showLoginBtn() {
                 return hasToken.value ? false : true;
@@ -157,6 +173,20 @@
             // appVisible: (val) => {
             //     console.log(val ? 'app activate' : 'app background');
             // },
+            hideIcon: function(val) {
+                this.$q.localStorage.set('clipbroad-hide-icon', val);
+                if (this.$q.platform.is.electron) {
+                    window.myAPI.setHideIcon(val);
+                }
+            },
+        },
+        created() {
+            this.hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
+                ? this.$q.localStorage.getItem('clipbroad-hide-icon')
+                : true;
+            if (this.$q.platform.is.electron) {
+                window.myAPI.setHideIcon(this.hideIcon);
+            }
         },
     };
 </script>
