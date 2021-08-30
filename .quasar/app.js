@@ -13,7 +13,7 @@
 
 
 import { Quasar } from 'quasar'
-import RootComponent from 'app/src/App.vue'
+import AppComponent from 'app/src/App.vue'
 
 
 import createStore from 'app/src/store/index'
@@ -21,7 +21,36 @@ import createStore from 'app/src/store/index'
 import createRouter from 'app/src/router/index'
 
 
+  
+  import '@capacitor/core'
+    
+    // importing it so it can install itself (used by Quasar UI)
+    import { App as CapApp } from '@capacitor/app'
+    
+    
+    import { SplashScreen } from '@capacitor/splash-screen'
+    
+  
 
+
+
+import { defineComponent, h, onMounted } from 'vue'
+const RootComponent = defineComponent({
+  name: 'AppWrapper',
+  setup (props) {
+    onMounted(() => {
+      
+      SplashScreen.hide()
+      
+
+      
+
+      
+    })
+
+    return () => h(AppComponent, props)
+  }
+})
 
 
 export default async function (createAppFn, quasarUserOptions) {
@@ -47,9 +76,13 @@ export default async function (createAppFn, quasarUserOptions) {
   const app = createAppFn(RootComponent)
 
   
+  app.config.devtools = true
+  
 
   app.use(Quasar, quasarUserOptions)
 
+  
+  app.config.globalProperties.$q.capacitor = window.Capacitor
   
 
   // Expose the app, the router and the store.

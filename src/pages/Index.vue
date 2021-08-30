@@ -39,6 +39,7 @@
     import { defineComponent } from 'vue';
     import { mapState, mapActions } from 'vuex';
     const SparkMD5 = require('spark-md5');
+    import { Clipboard } from '@capacitor/clipboard';
     var timers = [];
     var existEventListen = false;
 
@@ -89,6 +90,20 @@
                             });
                         }
                     }
+                } else if (this.$q.platform.is.capacitor) {
+                    Clipboard.read().then((data) => {
+                        if (data.type == 'text/plain') {
+                            const md5 = SparkMD5.hash(data.value);
+                            this.filterItem(md5);
+                            this.addItem({
+                                time: new Date().getTime(),
+                                value: data.value,
+                                md5: md5,
+                                uploaded: false,
+                                type: 'text',
+                            });
+                        }
+                    });
                 }
             },
             prevTime(timeStamp) {
@@ -149,7 +164,10 @@
                 if (this.$q.platform.is.electron) {
                     if (item.type == 'text') {
                         window.myAPI.writeClipboardText(item.value);
-                        window.myAPI.showNotification('Item copied!', item.value);
+                        window.myAPI.showNotification(
+                            'Item copied!',
+                            item.value
+                        );
                     } else if (item.type == 'png') {
                         window.myAPI.writeClipboardImage(item.value);
                         window.myAPI.showNotification('Item copied!');
@@ -366,6 +384,41 @@
                     });
                 }
             },
+            setupOpenwith() {
+                cordova.openwith.init(
+                    () => {
+                        cordova.openwith.addHandler((intent) => {
+                            for (var i = 0; i < intent.items.length; ++i) {
+                                var item = intent.items[i];
+                                cordova.openwith.load(item, (data, item) => {
+                                    if (item.type.includes('image/')) {
+                                        let imageMD5 = SparkMD5.hash(data);
+                                        this.filterItem(imageMD5);
+                                        this.addItem({
+                                            time: new Date().getTime(),
+                                            value: data,
+                                            md5: imageMD5,
+                                            uploaded: false,
+                                            type: 'png',
+                                        });
+                                    } else {
+                                        this.$q.notify(
+                                            'This file type is not supported'
+                                        );
+                                    }
+
+                                    if (intent.exit) {
+                                        cordova.openwith.exit();
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    () => {
+                        this.$q.notify('openwith plugin init failed');
+                    }
+                );
+            },
         },
         mounted() {
             if (this.$q.localStorage.has('clipbroad-github-token')) {
@@ -382,12 +435,17 @@
         created() {
             this.setDarkMode();
             if (!existEventListen) {
-                window.addEventListener('Sync', this.syncNow);
+                window.addEventListener('Sync', this.syncNow, false);
                 existEventListen = true;
             }
-            let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon') ? this.$q.localStorage.getItem('clipbroad-hide-icon') : true;
+            let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
+                ? this.$q.localStorage.getItem('clipbroad-hide-icon')
+                : true;
             if (this.$q.platform.is.electron) {
                 window.myAPI.setHideIcon(hideIcon);
+            }
+            if (this.$q.platform.is.cordova) {
+                this.setupOpenwith();
             }
         },
     });

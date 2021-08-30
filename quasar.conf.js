@@ -91,7 +91,7 @@ module.exports = configure(function (ctx) {
             // directives: [],
 
             // Quasar plugins
-            plugins: ['LocalStorage', 'AppVisibility'],
+            plugins: ['LocalStorage', 'AppVisibility', 'Notify'],
         },
 
         // animations: 'all', // --- includes all animations
@@ -179,11 +179,14 @@ module.exports = configure(function (ctx) {
         // Full list of options: https://v2.quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
         cordova: {
             // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
+            hideSplashscreen: true,
+            backButton: false,
         },
 
         // Full list of options: https://v2.quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
         capacitor: {
             hideSplashscreen: true,
+            backButton: false,
         },
 
         // Full list of options: https://v2.quasar.dev/quasar-cli/developing-electron-apps/configuring-electron

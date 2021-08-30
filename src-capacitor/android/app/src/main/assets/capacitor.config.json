@@ -1,0 +1,10 @@
+{
+	"appId": "com.logiconsole.clipbroad",
+	"appName": "ClipBroad",
+	"bundledWebRuntime": false,
+	"npmClient": "npm",
+	"webDir": "www",
+	"server": {
+		"url": "http://192.168.123.100:8080"
+	}
+}
