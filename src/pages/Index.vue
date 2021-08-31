@@ -39,7 +39,7 @@
     import { defineComponent } from 'vue';
     import { mapState, mapActions } from 'vuex';
     const SparkMD5 = require('spark-md5');
-    import { Clipboard } from '@capacitor/clipboard';
+    // import { Clipboard } from '@capacitor/clipboard';
     var timers = [];
     var existEventListen = false;
 
@@ -104,6 +104,19 @@
                             });
                         }
                     });
+                } else if (this.$q.platform.is.cordova) {
+                    cordova.plugins.clipboard.paste((text) => {
+                        if (text == null || text == '') return;
+                        const md5 = SparkMD5.hash(text);
+                        this.filterItem(md5);
+                        this.addItem({
+                            time: new Date().getTime(),
+                            value: text,
+                            md5: md5,
+                            uploaded: false,
+                            type: 'text',
+                        });
+                    });
                 }
             },
             prevTime(timeStamp) {
@@ -157,22 +170,35 @@
             },
             copyItem(index) {
                 const item = this.items[index];
-                this.removeItem(index);
-                item.time = new Date().getTime();
-                item.uploaded = false;
-                this.addItem(item);
-                if (this.$q.platform.is.electron) {
-                    if (item.type == 'text') {
-                        window.myAPI.writeClipboardText(item.value);
-                        window.myAPI.showNotification(
-                            'Item copied!',
-                            item.value
-                        );
-                    } else if (item.type == 'png') {
-                        window.myAPI.writeClipboardImage(item.value);
-                        window.myAPI.showNotification('Item copied!');
-                    }
-                    window.myAPI.hideWindow();
+                switch (item.type) {
+                    case 'text':
+                        this.removeItem(index);
+                        item.time = new Date().getTime();
+                        item.uploaded = false;
+                        this.addItem(item);
+                        if (this.$q.platform.is.electron) {
+                            window.myAPI.writeClipboardText(item.value);
+                            window.myAPI.showNotification(
+                                'Item copied!',
+                                item.value
+                            );
+                            window.myAPI.hideWindow();
+                        } else if (this.$q.platform.is.cordova) {
+                            cordova.plugins.clipboard.copy(item.value);
+                            this.$q.notify('Copied!');
+                        }
+                        break;
+                    case 'png':
+                        if (this.$q.platform.is.electron) {
+                            window.myAPI.writeClipboardImage(item.value);
+                            window.myAPI.showNotification('Item copied!');
+                            window.myAPI.hideWindow();
+                        } else if (this.$q.platform.is.cordova) {
+                            this.$q.notify('Not supported!');
+                        }
+                        break;
+                    default:
+                        break;
                 }
             },
             setDarkMode() {

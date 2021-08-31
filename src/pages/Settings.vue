@@ -1,6 +1,6 @@
 <template>
-    <q-page padding>
-        <div class="q-pa-md q-gutter-sm absolute-center">
+    <q-page class="column q-pa-md">
+        <div class="col-md-3 relative-position q-py-lg">
             <transition
                 appear
                 enter-active-class="animated fadeInDown"
@@ -8,6 +8,7 @@
             >
                 <q-btn
                     v-if="showLoginBtn"
+                    class="absolute-center q-my-md"
                     color="primary"
                     icon="login"
                     label="Login With Github"
@@ -19,7 +20,11 @@
                 enter-active-class="animated fadeInUp"
                 leave-active-class="animated fadeOutDown"
             >
-                <q-item v-ripple v-if="!showLoginBtn">
+                <q-item
+                    v-ripple
+                    v-if="!showLoginBtn"
+                    class="absolute-center q-my-md"
+                >
                     <q-item-section side v-if="avatarUrl != ''">
                         <q-avatar rounded size="48px">
                             <img :src="avatarUrl" />
@@ -44,18 +49,21 @@
                     </q-menu>
                 </q-item>
             </transition>
-
-            <q-separator />
-
+        </div>
+        <div class="col-1 relative-position q-pa-md"></div>
+        <div class="col relative-position q-pa-md">
             <q-toggle
+                v-if="$q.platform.is.mac"
                 v-model="hideIcon"
                 checked-icon="check"
+                class="absolute-center q-my-md"
                 color="green"
                 unchecked-icon="clear"
                 label="Hide Dock Icon"
                 left-label
             />
         </div>
+        <div class="col relative-position q-pa-md"></div>
     </q-page>
 </template>
 
@@ -173,7 +181,7 @@
             // appVisible: (val) => {
             //     console.log(val ? 'app activate' : 'app background');
             // },
-            hideIcon: function(val) {
+            hideIcon: function (val) {
                 this.$q.localStorage.set('clipbroad-hide-icon', val);
                 if (this.$q.platform.is.electron) {
                     window.myAPI.setHideIcon(val);

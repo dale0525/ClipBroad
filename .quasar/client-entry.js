@@ -53,7 +53,7 @@ import quasarUserOptions from './quasar-user-options.js'
 
 
 
-console.info('[Quasar] Running CAPACITOR.')
+console.info('[Quasar] Running ELECTRON.')
 
 
 

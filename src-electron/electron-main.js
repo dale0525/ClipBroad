@@ -93,7 +93,7 @@ app.on('ready', () => {
     tray.on('right-click', () => {
         tray.popUpContextMenu(contextMenu);
     });
-    tray.on('click', (e) => {
+    tray.on('click', () => {
         if (mainWindow.isVisible()) {
             mainWindow.hide();
         } else {
@@ -131,6 +131,7 @@ ipcMain.on('hideWindow', () => {
 });
 
 ipcMain.on('hideIcon', (e, hide) => {
+    if (process.platform !== 'darwin') return;
     if (hide) {
         app.dock.hide();
     } else {
