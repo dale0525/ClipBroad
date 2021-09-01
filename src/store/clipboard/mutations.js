@@ -3,7 +3,9 @@ export function addItem(state, item) {
     state.items.sort(function (a, b) {
         var x = a.time;
         var y = b.time;
-        return x < y ? 1 : x > y ? -1 : 0;
+        if (x < y) return 1;
+        if (x > y) return -1;
+        return 0;
     });
     while (state.items.length > 100) {
         state.items.pop();

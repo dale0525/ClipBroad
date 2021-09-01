@@ -1,9 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.logiconsole.clipbroad" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.logiconsole.clipbroad" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>ClipBroad</name>
-    <description>
-        A sample Apache Cordova application that responds to the deviceready event.
-    </description>
+    <description>Sync your clipboard across multiple devices</description>
     <author email="dev@cordova.apache.org" href="http://cordova.io">
         Apache Cordova Team
     </author>
@@ -74,4 +72,5 @@
         <splash src="res/screen/ios/Default@2x~ipad~comany.png" />
     </platform>
     <preference name="SplashMaintainAspectRatio" value="true" />
+    <allow-navigation href="about:*" />
 </widget>

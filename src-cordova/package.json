@@ -14,9 +14,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "cc.fovea.cordova.openwith": "^2.0.0",
+    "cordova-android": "^9.1.0",
     "cordova-clipboard": "^1.3.0",
-    "cordova-plugin-splashscreen": "^6.0.0",
-    "cordova-plugin-whitelist": "^1.3.4"
+    "cordova-plugin-androidx": "^3.0.0",
+    "cordova-plugin-androidx-adapter": "^1.1.3",
+    "cordova-plugin-whitelist": "^1.3.4",
+    "cordova-plugin-x-socialsharing": "^6.0.3",
+    "es6-promise-plugin": "^4.2.2"
   },
   "cordova": {
     "plugins": {
@@ -26,8 +30,13 @@
         "IOS_URL_SCHEME": "comlogiconsoleclipbroad",
         "IOS_UNIFORM_TYPE_IDENTIFIER": "public.image"
       },
-      "cordova-plugin-splashscreen": {},
-      "cordova-clipboard": {}
-    }
+      "cordova-clipboard": {},
+      "cordova-plugin-x-socialsharing": {},
+      "cordova-plugin-androidx-adapter": {},
+      "cordova-plugin-androidx": {}
+    },
+    "platforms": [
+      "android"
+    ]
   }
 }

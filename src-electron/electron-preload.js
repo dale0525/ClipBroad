@@ -45,7 +45,7 @@ contextBridge.exposeInMainWorld('myAPI', {
         ipcRenderer.send('hideWindow');
     },
     showNotification: (title, caption = null)=>{
-        new Notification(title, { body: caption });
+        new Notification(title, caption == null ? null : { body: caption });
     },
     setHideIcon: (hide)=>{
         ipcRenderer.send('hideIcon', hide);

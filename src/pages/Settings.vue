@@ -23,7 +23,6 @@
                 <q-item
                     v-ripple
                     v-if="!showLoginBtn"
-                    class="absolute-center q-my-md"
                 >
                     <q-item-section side v-if="avatarUrl != ''">
                         <q-avatar rounded size="48px">

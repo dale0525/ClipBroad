@@ -122,9 +122,9 @@ app.on('activate', () => {
     }
 });
 
-app.on('browser-window-blur', () => {
-    mainWindow.hide();
-});
+// app.on('browser-window-blur', () => {
+//     mainWindow.hide();
+// });
 
 ipcMain.on('hideWindow', () => {
     mainWindow.hide();

@@ -401,7 +401,7 @@ var Repository = function (_Requestable) {
          if (typeof content === 'string') {
             log('contet is a string');
             return {
-               content: _utf2.default.encode(content),
+               content: content,
                encoding: 'utf-8'
             };
          } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {

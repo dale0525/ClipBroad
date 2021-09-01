@@ -1,38 +1,49 @@
 <template>
-    <q-page class="q-pa-md">
-        <q-list bordered separator>
-            <transition-group
-                appear
-                enter-active-class="animated slideInLeft"
-                leave-active-class="animated fadeOutLeft"
-            >
-                <q-item
-                    v-for="(item, index) in items"
-                    :key="index"
-                    clickable
-                    v-ripple
-                    @dblclick="copyItem(index)"
+    <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
+        <q-page class="q-pa-md">
+            <q-list bordered separator>
+                <transition-group
+                    appear
+                    enter-active-class="animated slideInLeft"
+                    leave-active-class="animated fadeOutLeft"
                 >
-                    <q-item-section avatar>
-                        <q-icon color="primary" :name="itemIcon(item.type)" />
-                    </q-item-section>
-                    <q-item-section v-if="item.type == 'text'">
-                        <q-item-label lines="3">{{ item.value }}</q-item-label>
-                    </q-item-section>
-                    <q-item-section v-if="item.type == 'png'"
-                        ><img
-                            :src="'data:image/png;base64,' + item.value"
-                            style="max-height: 300px; object-fit: contain"
-                    /></q-item-section>
-                    <q-item-section side>
-                        <q-item-label caption>{{
-                            prevTime(item.time)
-                        }}</q-item-label>
-                    </q-item-section>
-                </q-item>
-            </transition-group>
-        </q-list>
-    </q-page>
+                    <q-item
+                        v-for="(item, index) in items"
+                        :key="index"
+                        clickable
+                        v-ripple
+                        @dblclick="copyItem(index)"
+                    >
+                        <q-item-section avatar>
+                            <q-icon
+                                color="primary"
+                                :name="itemIcon(item.type)"
+                            />
+                        </q-item-section>
+                        <q-item-section v-if="item.type == 'text'">
+                            <q-item-label lines="3">{{
+                                item.value
+                            }}</q-item-label>
+                        </q-item-section>
+                        <q-item-section v-if="item.type == 'png'"
+                            ><img
+                                :src="'data:image/png;base64,' + item.value"
+                                style="
+                                    max-height: 300px;
+                                    object-fit: contain;
+                                    max-width: 100%;
+                                "
+                        /></q-item-section>
+                        <q-item-section side>
+                            <q-item-label caption>{{
+                                prevTime(item.time)
+                            }}</q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </transition-group>
+            </q-list>
+        </q-page>
+    </q-pull-to-refresh>
 </template>
 
 <script>
@@ -42,6 +53,7 @@
     // import { Clipboard } from '@capacitor/clipboard';
     var timers = [];
     var existEventListen = false;
+    var openWithInited = false;
 
     export default defineComponent({
         computed: {
@@ -59,63 +71,20 @@
                     const image = window.myAPI.readClipboardImage();
                     if (image == null) {
                         const text = window.myAPI.readClipboardText();
-                        const textMD5 = SparkMD5.hash(text);
-                        if (
-                            text != '' &&
-                            (this.items.length < 1 ||
-                                this.items[0].md5 != textMD5)
-                        ) {
-                            this.filterItem(textMD5);
-                            this.addItem({
-                                time: new Date().getTime(),
-                                value: text,
-                                md5: textMD5,
-                                uploaded: false,
-                                type: 'text',
-                            });
-                        }
+                        this.addItemInternal(text, 'text');
                     } else {
-                        const imageMD5 = SparkMD5.hash(image);
-                        if (
-                            this.items.length < 1 ||
-                            this.items[0].md5 != imageMD5
-                        ) {
-                            this.filterItem(imageMD5);
-                            this.addItem({
-                                time: new Date().getTime(),
-                                value: image,
-                                md5: imageMD5,
-                                uploaded: false,
-                                type: 'png',
-                            });
-                        }
+                        this.addItemInternal(image, 'png');
                     }
                 } else if (this.$q.platform.is.capacitor) {
                     Clipboard.read().then((data) => {
                         if (data.type == 'text/plain') {
-                            const md5 = SparkMD5.hash(data.value);
-                            this.filterItem(md5);
-                            this.addItem({
-                                time: new Date().getTime(),
-                                value: data.value,
-                                md5: md5,
-                                uploaded: false,
-                                type: 'text',
-                            });
+                            this.addItemInternal(data.value, 'text');
                         }
                     });
                 } else if (this.$q.platform.is.cordova) {
                     cordova.plugins.clipboard.paste((text) => {
-                        if (text == null || text == '') return;
-                        const md5 = SparkMD5.hash(text);
-                        this.filterItem(md5);
-                        this.addItem({
-                            time: new Date().getTime(),
-                            value: text,
-                            md5: md5,
-                            uploaded: false,
-                            type: 'text',
-                        });
+                        if (text == this.items[1].value) return;
+                        this.addItemInternal(text, 'text');
                     });
                 }
             },
@@ -194,7 +163,16 @@
                             window.myAPI.showNotification('Item copied!');
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
-                            this.$q.notify('Not supported!');
+                            // this.$q.notify('Not supported!');
+                            window.plugins.socialsharing.shareWithOptions(
+                                {
+                                    files: ['data:image/png;base64,' + item.value],
+                                },
+                                null,
+                                (msg) => {
+                                    this.$q.notify(msg);
+                                }
+                            );
                         }
                         break;
                     default:
@@ -224,6 +202,13 @@
                                 if (nameSplit.length < 2) return;
                                 let fileType =
                                     fullName.length < 2 ? 'text' : fullName[1]; //name extension as file type
+                                let newTime = parseInt(nameSplit[0]);
+                                let newMD5 = nameSplit[1];
+                                let oldValue = this.items.find(
+                                    (item) => item.md5 == nameSplit[1]
+                                );
+                                if (oldValue != null && oldValue.time > newTime)
+                                    return;
                                 let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
                                 this.$githubInstance.githubRepo
@@ -233,16 +218,6 @@
                                             fileType == 'text'
                                                 ? data
                                                 : data.content;
-                                        let oldValue = this.items.find(
-                                            (item) => item.md5 == nameSplit[1]
-                                        );
-                                        let newTime = parseInt(nameSplit[0]);
-                                        let newMD5 = nameSplit[1];
-                                        if (
-                                            oldValue != null &&
-                                            oldValue.time > newTime
-                                        )
-                                            return;
                                         this.filterItem(newMD5);
                                         this.addItem({
                                             time: newTime,
@@ -401,12 +376,13 @@
                 timers.push(checkClipboardInterval);
                 timers.push(UploadToGithubInterval);
             },
-            syncNow() {
+            syncNow(done) {
                 if (!this.$githubInstance.githubRepoExist) {
                     this.$router.push('/settings');
                 } else {
                     this.UploadToGithub().then(() => {
                         this.updateFromGithub();
+                        setTimeout(done, 1000);
                     });
                 }
             },
@@ -418,15 +394,8 @@
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
                                     if (item.type.includes('image/')) {
-                                        let imageMD5 = SparkMD5.hash(data);
-                                        this.filterItem(imageMD5);
-                                        this.addItem({
-                                            time: new Date().getTime(),
-                                            value: data,
-                                            md5: imageMD5,
-                                            uploaded: false,
-                                            type: 'png',
-                                        });
+                                        this.addItemInternal(data, 'png');
+                                        console.log(this.items);
                                     } else {
                                         this.$q.notify(
                                             'This file type is not supported'
@@ -439,11 +408,28 @@
                                 });
                             }
                         });
+                        openWithInited = true;
                     },
                     () => {
                         this.$q.notify('openwith plugin init failed');
                     }
                 );
+            },
+            addItemInternal(data, type) {
+                const md5 = SparkMD5.hash(data);
+                if (
+                    data != '' &&
+                    (this.items.length < 1 || this.items[0].md5 != md5)
+                ) {
+                    this.filterItem(md5);
+                    this.addItem({
+                        time: new Date().getTime(),
+                        value: data,
+                        md5: md5,
+                        uploaded: false,
+                        type: type,
+                    });
+                }
             },
         },
         mounted() {
@@ -471,7 +457,7 @@
                 window.myAPI.setHideIcon(hideIcon);
             }
             if (this.$q.platform.is.cordova) {
-                this.setupOpenwith();
+                if (!openWithInited) this.setupOpenwith();
             }
         },
     });

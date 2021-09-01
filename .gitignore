@@ -13,3 +13,4 @@ dist
 # Mac OS
 .DS_Store
 out/
+my-release-key.keystore
