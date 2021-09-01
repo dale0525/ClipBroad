@@ -14,3 +14,5 @@ dist
 .DS_Store
 out/
 my-release-key.keystore
+
+._*
