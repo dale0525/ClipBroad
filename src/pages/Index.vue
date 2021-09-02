@@ -186,7 +186,7 @@
                 }
             },
             updateFromGithub() {
-                console.log('updating from github...');
+                this.$q.notify('Updating...');
                 if (!this.$githubInstance.githubRepoExist) {
                     console.log('github repo does not exist');
                     return;

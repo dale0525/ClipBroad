@@ -105,7 +105,7 @@ app.on('ready', () => {
         app.setAppUserModelId(app.name);
     }
 
-    globalShortcut.register('CommandOrControl+Shift+C', () => {
+    globalShortcut.register('CommandOrControl+Shift+V', () => {
         mainWindow.show();
     });
 });
