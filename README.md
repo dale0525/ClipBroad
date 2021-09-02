@@ -5,18 +5,18 @@
 *2. _getContentObject function at line 404 in node_modules/github-api/dist/components/Repository.js is modified to avoid duplicate utf8 encoding*
 
 ## TODO
-- [x] Settings for max sync item
-- [x] Settings for launch on system boot on desktop
-- [x] About page
-- [x] Delete local item
-- [x] Delete related Github item
-- [x] Support other common binary files
-- [x] Settings for dark mode
-- [x] Settings for desktop shortcut
-- [x] Search function
-- [x] Redirect to app after Github login on mobile
-- [x] Auto update for Windows & Mac
-- [x] Auto update for iOS & Android
-- [x] Upload to App Store(iOS)
-- [x] Upload to Google Play
-- [x] Linux build
+- [ ] Settings for max sync item
+- [ ] Settings for launch on system boot on desktop
+- [ ] About page
+- [ ] Delete local item
+- [ ] Delete related Github item
+- [ ] Support other common binary files
+- [ ] Settings for dark mode
+- [ ] Settings for desktop shortcut
+- [ ] Search function
+- [ ] Redirect to app after Github login on mobile
+- [ ] Auto update for Windows & Mac
+- [ ] Auto update for iOS & Android
+- [ ] Upload to App Store(iOS)
+- [ ] Upload to Google Play
+- [ ] Linux build
