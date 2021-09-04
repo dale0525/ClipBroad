@@ -1,10 +1,45 @@
 # ClipBroad
- Sync your clipboard across multiple platforms
+Sync your clipboard across multiple platforms. [Download the latest release here.](https://github.com/dale0525/ClipBroad/releases)
+
+## Introduction
+This tools uses Github private repo to store and sync your clipboard items. By default, it listens to your local clipboard change like other clipboard tools do. After login to Github, local clipboard items will be uploaded to Github on a frequent basis, while remote items will be fetched to local.
+
+**Currently only available on Windows, Mac & Android**
+
+**Currently only text and images are supported**
+
+## Usage
+- Login at the Settings page
+- Drag to upload & update on the main page
+- Double click to copy item on desktop
+- Double tap to copy text or share image on mobile
+- Items are automatically uploaded every 30 seconds (will be configurable in the future)
+- Click tray icon on desktop to show/hide main panel
+- Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (will be configurable in the future)
+- Images on mobile are not in clipboard, but can be shared to this app (ClipBroad)
+
+## Screenshots
+Android:
+
+![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
+
+Mac:
+
+![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
+
+Windows:
+
+![]https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png
+
+Github Private Repo:
+
 
 ## TODO
 - [ ] Settings for max sync item
 - [ ] Settings for launch on system boot on desktop
 - [ ] Settings for copied notification
+- [ ] Settings for upload interval
+- [ ] Settings for network connection on mobile
 - [ ] About page
 - [ ] Localization (US, zhCN)
 - [ ] Delete local item
