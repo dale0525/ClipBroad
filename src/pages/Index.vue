@@ -397,7 +397,7 @@
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
                                     if (item.type.includes('image/')) {
-                                        this.addItemInternal(data, 'png');
+                                        this.addItemInternal(data, 'png', 'share');
                                         console.log(this.items);
                                     } else {
                                         this.$q.notify(
