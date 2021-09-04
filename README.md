@@ -10,6 +10,8 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 
 **Currently only text and images are supported**
 
+*This is a very early version solely for personal use. Though CPU/RAM/Battery usages are very low, it may consume network traffic during sync process. Use on your risk.*
+
 ## Usage
 - Login at the Settings page
 - Drag to upload & update on the main page
