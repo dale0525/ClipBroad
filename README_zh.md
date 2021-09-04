@@ -19,19 +19,13 @@
 - 移动端无法将图片复制进剪贴板，但可以分享图片到本应用(ClipBroad)
 
 ## 截图
-Android:
+![Android](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
+![Mac](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
 
-Mac:
+![Windows](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png)
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
-
-Windows:
-
-![]https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png
-
-Github私人仓库:
+![Github Private Repo](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
 
 
 ## 待办

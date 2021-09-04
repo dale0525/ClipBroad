@@ -19,19 +19,13 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - Images on mobile are not in clipboard, but can be shared to this app (ClipBroad)
 
 ## Screenshots
-Android:
+![Android](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
+![Mac](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
 
-Mac:
+![Windows](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png)
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
-
-Windows:
-
-![]https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png
-
-Github Private Repo:
+![Github Private Repo](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
 
 
 ## TODO
