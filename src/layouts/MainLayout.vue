@@ -43,6 +43,7 @@
                     v-for="link in navigations"
                     :key="link.title"
                     v-bind="link"
+                    @click="toggleLeftDrawer"
                 />
             </q-list>
         </q-drawer>

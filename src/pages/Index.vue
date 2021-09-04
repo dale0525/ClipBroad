@@ -48,7 +48,7 @@
 
 <script>
     import { defineComponent } from 'vue';
-    import { mapState, mapActions } from 'vuex';
+    import { mapState, mapActions, mapGetters } from 'vuex';
     const SparkMD5 = require('spark-md5');
     // import { Clipboard } from '@capacitor/clipboard';
     var timers = [];
@@ -58,6 +58,7 @@
     export default defineComponent({
         computed: {
             ...mapState('clipboard', ['items']),
+            ...mapGetters('clipboard', ['lastLocalItem']),
         },
         methods: {
             ...mapActions('clipboard', [
@@ -83,7 +84,6 @@
                     });
                 } else if (this.$q.platform.is.cordova) {
                     cordova.plugins.clipboard.paste((text) => {
-                        if (text == this.items[1].value) return;
                         this.addItemInternal(text, 'text');
                     });
                 }
@@ -166,7 +166,9 @@
                             // this.$q.notify('Not supported!');
                             window.plugins.socialsharing.shareWithOptions(
                                 {
-                                    files: ['data:image/png;base64,' + item.value],
+                                    files: [
+                                        'data:image/png;base64,' + item.value,
+                                    ],
                                 },
                                 null,
                                 (msg) => {
@@ -225,6 +227,7 @@
                                             uploaded: true,
                                             value: dataValue,
                                             type: fileType,
+                                            source: 'remote',
                                         });
                                     });
                             })(i);
@@ -415,11 +418,13 @@
                     }
                 );
             },
-            addItemInternal(data, type) {
+            addItemInternal(data, type, source = 'local') {
                 const md5 = SparkMD5.hash(data);
                 if (
                     data != '' &&
-                    (this.items.length < 1 || this.items[0].md5 != md5)
+                    (this.items.length < 1 ||
+                        (this.lastLocalItem != null &&
+                            this.lastLocalItem.md5 != md5))
                 ) {
                     this.filterItem(md5);
                     this.addItem({
@@ -428,6 +433,7 @@
                         md5: md5,
                         uploaded: false,
                         type: type,
+                        source: source,
                     });
                 }
             },
