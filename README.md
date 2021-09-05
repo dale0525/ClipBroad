@@ -96,3 +96,6 @@ quasar build -m cordova [-T android] [-T ios]
 3. [j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
 4. [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
 5. [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
+
+## Donation
+[Paypal](https://paypal.me/logictan)
