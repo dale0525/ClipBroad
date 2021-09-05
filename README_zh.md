@@ -4,11 +4,11 @@
 ## 介绍
 此工具利用Github私人仓库存储并同步剪贴板。默认情况下，它只会和其他剪贴板工具一样记录剪贴板历史。在授权登录Github后，本地历史记录会被上传到Github私人仓库，并将私人仓库的其他历史记录同步到本地。
 
-**目前只支持Windows、Mac和Android**
-
 **当前只支持文字和图片**
 
 *当前版本只是个人使用的早期版本。尽管本工具耗费的设备占用和电量很低，但在同步时会消耗流量。请酌情使用。*
+
+**目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要自行编译。**
 
 ## 使用方法
 - 在设置界面登录Github
@@ -37,6 +37,33 @@ Github私人仓库:
 
 ![](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
 
+
+## 编译
+1. 复制此仓库
+```
+git clone https://github.com/dale0525/ClipBroad.git
+```
+2. 安装Quasar
+```
+$ npm install -g @quasar/cli
+```
+3. 安装依赖库
+```
+cd ClipBroad
+npm install
+cd src-electron
+npm install
+cd ../src-cordova
+npm install
+```
+4. 编译
+```
+cd ..
+# 桌面版
+quasar build -m electron [-T darwin] [-T win32] [-T linux]
+# 手机版
+quasar build -m cordova [-T android] [-T ios]
+```
 
 ## 待办
 - [ ] 设置最大同步条数

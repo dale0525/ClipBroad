@@ -6,11 +6,11 @@ Sync your clipboard across multiple platforms. [Download the latest release here
 ## Introduction
 This tools uses Github private repo to store and sync your clipboard items. By default, it listens to your local clipboard change like other clipboard tools do. After login to Github, local clipboard items will be uploaded to Github on a frequent basis, while remote items will be fetched to local.
 
-**Currently only available on Windows, Mac & Android**
-
 **Currently only text and images are supported**
 
-*This is a very early version solely for personal use. Though CPU/RAM/Battery usages are very low, it may consume network traffic during sync process. Use on your risk.*
+*This is a very early version solely for personal use. Though CPU/RAM/Battery usages are very low, it may consume network traffic during sync process. Use on your own risk.*
+
+**Currently only available on Windows, Mac & Android. Linux and iOS should also work, but you need to build on your own.**
 
 ## Usage
 - Login at the Settings page
@@ -39,6 +39,33 @@ Github Private Repo:
 
 ![](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
 
+
+## Build
+1. Clone this repository
+```
+git clone https://github.com/dale0525/ClipBroad.git
+```
+2. Install Quasar
+```
+$ npm install -g @quasar/cli
+```
+3. Install node dependencies
+```
+cd ClipBroad
+npm install
+cd src-electron
+npm install
+cd ../src-cordova
+npm install
+```
+4. Build
+```
+cd ..
+# Desktop verison
+quasar build -m electron [-T darwin] [-T win32] [-T linux]
+# Mobile version
+quasar build -m cordova [-T android] [-T ios]
+```
 
 ## TODO
 - [ ] Settings for max sync item
