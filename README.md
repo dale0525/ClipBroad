@@ -68,7 +68,7 @@ quasar build -m cordova [-T android] [-T ios]
 ```
 
 ## TODO
-- [ ] Settings for max sync item
+- [x] Settings for max sync item
 - [ ] Settings for launch on system boot on desktop
 - [ ] Settings for copied notification
 - [ ] Settings for upload interval

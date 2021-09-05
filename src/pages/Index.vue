@@ -51,9 +51,11 @@
     import { mapState, mapActions, mapGetters } from 'vuex';
     const SparkMD5 = require('spark-md5');
     // import { Clipboard } from '@capacitor/clipboard';
+    const maxItemLength = 500;
     var timers = [];
     var existEventListen = false;
     var openWithInited = false;
+    var toDeleteRemote = 0;
 
     export default defineComponent({
         computed: {
@@ -196,8 +198,23 @@
                 this.$githubInstance.githubRepo
                     .getContents('main', '', true)
                     .then(({ data }) => {
-                        for (let i = 0; i < data.length; i++) {
+                        toDeleteRemote = Math.max(
+                            data.length - maxItemLength,
+                            toDeleteRemote
+                        );
+                        const settingsMax = this.$q.localStorage.has(
+                            'clipbroad-max-item'
+                        )
+                            ? this.$q.localStorage.getItem('clipbroad-max-item')
+                            : 20;
+                        var fetchedItems = 0;
+                        for (
+                            let i = data.length - 1;
+                            i >= Math.max(0, data.length - maxItemLength);
+                            i--
+                        ) {
                             ((i) => {
+                                if (fetchedItems >= settingsMax) return;
                                 let fullName = data[i].name;
                                 fullName = fullName.split('.');
                                 let nameSplit = fullName[0].split('-');
@@ -211,6 +228,7 @@
                                 );
                                 if (oldValue != null && oldValue.time > newTime)
                                     return;
+                                fetchedItems++;
                                 let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
                                 this.$githubInstance.githubRepo
@@ -232,6 +250,48 @@
                                     });
                             })(i);
                         }
+                        if (toDeleteRemote <= 0) return;
+                        let treeItems = [];
+                        for (let j = 0; j < toDeleteRemote; j++) {
+                            treeItems.push({
+                                path: data[j].path,
+                                sha: null,
+                                mode: '100644',
+                                type: 'blob',
+                            });
+                        }
+                        let ghsha;
+                        this.GetSha()
+                            .then((data) => {
+                                ghsha = data;
+                            })
+                            .then(() =>
+                                this.$githubInstance.githubRepo.createTree(
+                                    treeItems,
+                                    ghsha.commit
+                                )
+                            )
+                            .then(({ data }) => {
+                                return this.$githubInstance.githubRepo.commit(
+                                    ghsha.parent,
+                                    data.sha,
+                                    'delete files'
+                                );
+                            })
+                            .then(({ data }) => {
+                                this.$githubInstance.githubRepo.updateHead(
+                                    'heads/main',
+                                    data.sha,
+                                    true
+                                );
+                            })
+                            .then(() => {
+                                toDeleteRemote = 0;
+                                console.log('delete complete');
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                            });
                     });
             },
             UploadToGithub() {
@@ -397,7 +457,11 @@
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
                                     if (item.type.includes('image/')) {
-                                        this.addItemInternal(data, 'png', 'share');
+                                        this.addItemInternal(
+                                            data,
+                                            'png',
+                                            'share'
+                                        );
                                         console.log(this.items);
                                     } else {
                                         this.$q.notify(

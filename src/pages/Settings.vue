@@ -1,6 +1,6 @@
 <template>
     <q-page class="column q-pa-md">
-        <div class="col-md-3 relative-position q-py-lg">
+        <div class="col-md-3 relative-position q-pa-md">
             <transition
                 appear
                 enter-active-class="animated fadeInDown"
@@ -8,7 +8,7 @@
             >
                 <q-btn
                     v-if="showLoginBtn"
-                    class="absolute-center q-my-md"
+                    class="q-my-md"
                     color="primary"
                     icon="login"
                     label="Login With Github"
@@ -20,10 +20,7 @@
                 enter-active-class="animated fadeInUp"
                 leave-active-class="animated fadeOutDown"
             >
-                <q-item
-                    v-ripple
-                    v-if="!showLoginBtn"
-                >
+                <q-item v-ripple v-if="!showLoginBtn">
                     <q-item-section side v-if="avatarUrl != ''">
                         <q-avatar rounded size="48px">
                             <img :src="avatarUrl" />
@@ -50,19 +47,35 @@
             </transition>
         </div>
         <div class="col-1 relative-position q-pa-md"></div>
-        <div class="col relative-position q-pa-md">
+        <div class="col relative-position q-pa-md fixed-center">
             <q-toggle
                 v-if="$q.platform.is.mac"
                 v-model="hideIcon"
                 checked-icon="check"
-                class="absolute-center q-my-md"
                 color="green"
                 unchecked-icon="clear"
                 label="Hide Dock Icon"
                 left-label
             />
+            <q-select
+                label="Max Sync Items"
+                transition-show="jump-up"
+                transition-hide="jump-up"
+                filled
+                v-model="maxItem"
+                :options="[20, 40, 60, 80, 100]"
+                style="width: 250px"
+            >
+                <q-tooltip
+                    anchor="top middle"
+                    self="bottom middle"
+                    :offset="[10, 10]"
+                >
+                    Due to duplication, the actual items in History may be less
+                    than this amount.
+                </q-tooltip>
+            </q-select>
         </div>
-        <div class="col relative-position q-pa-md"></div>
     </q-page>
 </template>
 
@@ -81,6 +94,7 @@
         data() {
             return {
                 hideIcon: true,
+                maxItem: 40,
             };
         },
         computed: {
@@ -185,6 +199,9 @@
                 if (this.$q.platform.is.electron) {
                     window.myAPI.setHideIcon(val);
                 }
+            },
+            maxItem: function (val) {
+                this.$q.localStorage.set('clipbroad-max-item', val);
             },
         },
         created() {
