@@ -8,7 +8,7 @@
 
 *当前版本只是个人使用的早期版本。尽管本工具耗费的设备占用和电量很低，但在同步时会消耗流量。请酌情使用。*
 
-**目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要自行编译。**
+**目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要[自行编译](https://github.com/dale0525/ClipBroad#build)。**
 
 ## 使用方法
 - 在设置界面登录Github
