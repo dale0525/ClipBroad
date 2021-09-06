@@ -102,5 +102,10 @@ quasar build -m cordova [-T android] [-T ios]
 - [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
 
 ## 赞助
+支付宝：
+
 <img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_alipay.png?raw=true" width="200">
+
+微信：
+
 <img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_wechat.png?raw=true" width="200">
