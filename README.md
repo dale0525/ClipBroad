@@ -10,6 +10,8 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 
 *This is a very early version solely for personal use. Though CPU/RAM/Battery usages are very low, it may consume network traffic during sync process. Use on your own risk.*
 
+*By login to Github, ClipBroad will ask for your **user** and **repo** permission. These permissions are used to get your avatar, username, Github API rate limit, as well as creating a private repository named **ClipBroadHistory** for you, uploading and deleting clipboard items to this repository.*
+
 **Currently only available on Windows, Mac & Android. Linux and iOS should also work, but you need to [build on your own](https://github.com/dale0525/ClipBroad#build).**
 
 ## Usage

@@ -8,6 +8,8 @@
 
 *当前版本只是个人使用的早期版本。尽管本工具耗费的设备占用和电量很低，但在同步时会消耗流量。请酌情使用。*
 
+*登录Github账号时，ClipBroad会请求获得**user**和**repo**权限。这两个权限将用来获得用户的头像、用户名和Github API次数限制等信息，以及创建一个名为**ClipBroadHistory**的私人仓库，并向这个仓库提交和删除剪贴板内容。*
+
 **目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要[自行编译](https://github.com/dale0525/ClipBroad#build)。**
 
 ## 使用方法
