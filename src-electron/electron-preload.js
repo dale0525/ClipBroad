@@ -49,7 +49,10 @@ contextBridge.exposeInMainWorld('myAPI', {
     },
     setHideIcon: (hide)=>{
         ipcRenderer.send('hideIcon', hide);
-    }
+    },
+    registerAutoLaunch: (enable)=>{
+        ipcRenderer.send('registerAutoLaunch', enable);
+    },
 });
 
 ipcRenderer.on('Sync', () => {

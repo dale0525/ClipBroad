@@ -1,6 +1,6 @@
 <template>
-    <q-page class="column q-pa-md">
-        <div class="col-md-3 relative-position q-pa-md">
+    <q-page class="column q-pa-md items-center">
+        <div class="col-3 q-py-md">
             <transition
                 appear
                 enter-active-class="animated fadeInDown"
@@ -8,7 +8,6 @@
             >
                 <q-btn
                     v-if="showLoginBtn"
-                    class="q-my-md"
                     color="primary"
                     icon="login"
                     label="Login With Github"
@@ -46,35 +45,130 @@
                 </q-item>
             </transition>
         </div>
-        <div class="col-1 relative-position q-pa-md"></div>
-        <div class="col relative-position q-pa-md fixed-center">
-            <q-toggle
-                v-if="$q.platform.is.mac"
-                v-model="hideIcon"
-                checked-icon="check"
-                color="green"
-                unchecked-icon="clear"
-                label="Hide Dock Icon"
-                left-label
-            />
-            <q-select
-                label="Max Sync Items"
-                transition-show="jump-up"
-                transition-hide="jump-up"
-                filled
-                v-model="maxItem"
-                :options="[20, 40, 60, 80, 100]"
-                style="width: 250px"
-            >
-                <q-tooltip
-                    anchor="top middle"
-                    self="bottom middle"
-                    :offset="[10, 10]"
+        <div class="col-1 q-py-md" style="width: 100%">
+            <q-separator />
+        </div>
+        <div class="col-6 q-pa-md items-center">
+            <div>
+                <q-toggle
+                    v-if="$q.platform.is.mac"
+                    v-model="hideIcon"
+                    checked-icon="check"
+                    color="green"
+                    unchecked-icon="clear"
+                    label="Hide dock icon"
+                    left-label
+                />
+            </div>
+            <div>
+                <q-toggle
+                    v-if="$q.platform.is.electron"
+                    v-model="autoLaunch"
+                    checked-icon="check"
+                    color="green"
+                    unchecked-icon="clear"
+                    label="Launch with system"
+                    left-label
+                    class="q-mb-md"
+                />
+            </div>
+            <div>
+                <q-toggle
+                    v-if="$q.platform.is.electron"
+                    v-model="showCopiedNotification"
+                    checked-icon="check"
+                    color="green"
+                    unchecked-icon="clear"
+                    label="Show notification when items are copied"
+                    left-label
+                    class="q-mb-md"
+                />
+            </div>
+            <div>
+                <q-select
+                    label="Max Sync Items"
+                    transition-show="jump-up"
+                    transition-hide="jump-up"
+                    filled
+                    v-model="maxItem"
+                    :options="[20, 40, 60, 80, 100]"
+                    style="width: 250px"
                 >
-                    Due to duplication, the actual items in History may be less
-                    than this amount.
-                </q-tooltip>
-            </q-select>
+                    <q-tooltip
+                        anchor="top middle"
+                        self="bottom middle"
+                        :offset="[10, 10]"
+                    >
+                        Due to duplication, the actual items in History may be
+                        less than this amount.
+                    </q-tooltip>
+                </q-select>
+            </div>
+        </div>
+        <div class="col-1 q-py-md" style="width: 100%">
+            <q-separator />
+        </div>
+        <div class="col q-pa-md items-center">
+            <div>
+                Version <q-badge color="primary">{{ version }}</q-badge>
+            </div>
+            <div>
+                Resources
+                <q-chip
+                    clickable
+                    @click="
+                        openExternalURL('https://github.com/dale0525/ClipBroad')
+                    "
+                    color="grey-10"
+                    text-color="white"
+                >
+                    Github
+                </q-chip>
+                <q-chip
+                    clickable
+                    @click="openExternalURL('https://www.logiconsole.com')"
+                    color="black"
+                    text-color="white"
+                >
+                    Blog
+                </q-chip>
+            </div>
+            <div>
+                Donation
+                <q-chip
+                    clickable
+                    @click="openExternalURL('https://paypal.me/logictan')"
+                    color="indigo-10"
+                    text-color="white"
+                    icon="paypal"
+                >
+                    Paypal
+                </q-chip>
+                <q-chip color="green" text-color="white" icon="wechat">
+                    Wechat
+                    <q-popup-proxy>
+                        <q-banner style="width: 250px">
+                            <q-img
+                                src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_wechat.png?raw=true"
+                                spinner-color="primary"
+                                style="max-width: 250px"
+                            />
+                        </q-banner>
+                    </q-popup-proxy>
+                </q-chip>
+                <q-chip color="blue-7" text-color="white">
+                    Alipay
+                    <q-popup-proxy>
+                        <q-banner style="width: 250px">
+                            <q-img
+                                src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_alipay.png?raw=true"
+                                spinner-color="primary"
+                                style="max-width: 250px"
+                            />
+                        </q-banner>
+                    </q-popup-proxy>
+                </q-chip>
+            </div>
         </div>
     </q-page>
 </template>
@@ -93,8 +187,23 @@
     export default {
         data() {
             return {
-                hideIcon: true,
-                maxItem: 40,
+                hideIcon: this.$q.localStorage.has('clipbroad-hide-icon')
+                    ? this.$q.localStorage.getItem('clipbroad-hide-icon')
+                    : false,
+                autoLaunch: this.$q.localStorage.has('clipbroad-auto-launch')
+                    ? this.$q.localStorage.getItem('clipbroad-auto-launch')
+                    : false,
+                showCopiedNotification: this.$q.localStorage.has(
+                    'clipbroad-show-copied-notification'
+                )
+                    ? this.$q.localStorage.getItem(
+                          'clipbroad-show-copied-notification'
+                      )
+                    : true,
+                maxItem: this.$q.localStorage.has('clipbroad-max-item')
+                    ? this.$q.localStorage.getItem('clipbroad-max-item')
+                    : 40,
+                version: process.env.VERSION,
             };
         },
         computed: {
@@ -119,9 +228,7 @@
                 let uuid = uid();
                 this.$q.localStorage.set('clipbroad-github-state', uuid);
                 openURL(
-                    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`,
-                    null,
-                    { noreferrer: false }
+                    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`
                 );
                 loggin = true;
             },
@@ -147,6 +254,14 @@
                     })
                     .catch(() => {});
             },
+            openExternalURL(url) {
+                openURL(url, null, {
+                    noopener: true,
+                    menubar: true,
+                    toolbar: true,
+                    noreferrer: true,
+                });
+            },
         },
         mounted() {
             // this.$q.localStorage.remove('clipbroad-github-token');
@@ -169,9 +284,9 @@
                         })
                         .then(({ data }) => {
                             if (data.status != 'success') {
-                                console.log(data.message);
+                                // console.log(data.message);
                             } else {
-                                console.log(`access token is ${data.message}`);
+                                // console.log(`access token is ${data.message}`);
                                 this.$q.localStorage.set(
                                     'clipbroad-github-token',
                                     data.message
@@ -196,9 +311,21 @@
             // },
             hideIcon: function (val) {
                 this.$q.localStorage.set('clipbroad-hide-icon', val);
-                if (this.$q.platform.is.electron) {
+                if (this.$q.platform.is.mac) {
                     window.myAPI.setHideIcon(val);
                 }
+            },
+            autoLaunch: function (val) {
+                this.$q.localStorage.set('clipbroad-auto-launch', val);
+                if (this.$q.platform.is.electron) {
+                    window.myAPI.registerAutoLaunch(val);
+                }
+            },
+            showCopiedNotification: function (val) {
+                this.$q.localStorage.set(
+                    'clipbroad-show-copied-notification',
+                    val
+                );
             },
             maxItem: function (val) {
                 this.$q.localStorage.set('clipbroad-max-item', val);

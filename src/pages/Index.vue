@@ -99,33 +99,25 @@
                 } else if (seconds < 60) {
                     return (
                         seconds.toString() +
-                        ' second' +
-                        (seconds < 2 ? '' : 's') +
-                        ' ago'
+                        's ago'
                     );
                 } else if (seconds < 3600) {
                     const minutes = parseInt(seconds / 60);
                     return (
                         minutes.toString() +
-                        ' minute' +
-                        (minutes < 2 ? '' : 's') +
-                        ' ago'
+                        'm ago'
                     );
                 } else if (seconds < 3600 * 24) {
                     const hours = parseInt(seconds / 3600);
                     return (
                         hours.toString() +
-                        ' hour' +
-                        (hours < 2 ? '' : 's') +
-                        ' ago'
+                        'h ago'
                     );
                 } else {
                     const days = parseInt(seconds / 3600 / 24);
                     return (
                         days.toString() +
-                        ' day' +
-                        (days < 2 ? '' : 's') +
-                        ' ago'
+                        'd ago'
                     );
                 }
             },
@@ -149,10 +141,15 @@
                         this.addItem(item);
                         if (this.$q.platform.is.electron) {
                             window.myAPI.writeClipboardText(item.value);
-                            window.myAPI.showNotification(
-                                'Item copied!',
-                                item.value
-                            );
+                            if (
+                                this.$q.localStorage.getItem(
+                                    'clipbroad-show-copied-notification'
+                                ) === true
+                            )
+                                window.myAPI.showNotification(
+                                    'Item copied!',
+                                    item.value
+                                );
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             cordova.plugins.clipboard.copy(item.value);
@@ -162,7 +159,12 @@
                     case 'png':
                         if (this.$q.platform.is.electron) {
                             window.myAPI.writeClipboardImage(item.value);
-                            window.myAPI.showNotification('Item copied!');
+                            if (
+                                this.$q.localStorage.getItem(
+                                    'clipbroad-show-copied-notification'
+                                ) === true
+                            )
+                                window.myAPI.showNotification('Item copied!');
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             // this.$q.notify('Not supported!');
@@ -381,17 +383,17 @@
                                                 );
                                             })
                                             .then(() => {
-                                                console.log('Upload complete');
+                                                this.$q.notify('Upload completed.');
                                                 resolve();
                                             })
                                             .catch((error) => {
-                                                console.log(error);
+                                                this.$q.notify(error);
                                                 reject();
                                             });
                                     }
                                 })
                                 .catch((error) => {
-                                    console.log(error);
+                                    this.$q.notify(error);
                                     reject();
                                 });
                         })(i);
@@ -462,7 +464,6 @@
                                             'png',
                                             'share'
                                         );
-                                        console.log(this.items);
                                     } else {
                                         this.$q.notify(
                                             'This file type is not supported'
@@ -529,6 +530,7 @@
             if (this.$q.platform.is.cordova) {
                 if (!openWithInited) this.setupOpenwith();
             }
+            this.resetTimer();
         },
     });
 </script>

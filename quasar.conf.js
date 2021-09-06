@@ -8,6 +8,7 @@
 
 const { configure } = require('quasar/wrappers');
 const path = require('path');
+const { version } = require('./package.json');
 
 module.exports = configure(function (ctx) {
     return {
@@ -65,6 +66,9 @@ module.exports = configure(function (ctx) {
             chainWebpack(chain) {
                 const nodePolyfillWebpackPlugin = require('node-polyfill-webpack-plugin');
                 chain.plugin('node-polyfill').use(nodePolyfillWebpackPlugin);
+            },
+            env: {
+                VERSION: version,
             },
         },
 

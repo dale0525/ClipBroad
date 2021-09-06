@@ -8,6 +8,7 @@ import {
     globalShortcut,
 } from 'electron';
 import path from 'path';
+const AutoLaunch = require('auto-launch');
 
 try {
     if (
@@ -137,4 +138,24 @@ ipcMain.on('hideIcon', (e, hide) => {
     } else {
         app.dock.show();
     }
+});
+
+ipcMain.on('registerAutoLaunch', (e, enable) => {
+    let autoLaunch = new AutoLaunch({
+        name: 'ClipBroad',
+        path: app.getPath('exe'),
+        isHidden: true,
+    });
+    autoLaunch.isEnabled().then((isEnabled) => {
+        if (!isEnabled && enable)
+            autoLaunch
+                .enable()
+                .then(console.log('Auto Launch Enabled!'))
+                .catch((error) => console.log(error));
+        else if (isEnabled && !enable)
+            autoLaunch
+                .disable()
+                .then(console.log('Auto Launch Disabled!'))
+                .catch((error) => console.log(error));
+    });
 });

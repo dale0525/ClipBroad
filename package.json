@@ -1,6 +1,6 @@
 {
   "name": "clipbroad",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Sync your clipboard across multiple devices",
   "productName": "ClipBroad",
   "author": "Logic Tan",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "auto-launch": "^5.0.5",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "github-api": "^3.4.0",

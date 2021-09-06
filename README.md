@@ -25,19 +25,19 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 ## Screenshots
 Android:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/android.png?raw=true" width="600">
 
 Mac:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/mac.png?raw=true" width="600">
 
 Windows:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/win.png?raw=true" width="600">
 
 Github Private Repo:
 
-![](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/GithubPrivateRepo.png?raw=true" width="600">
 
 
 ## Build
@@ -58,9 +58,14 @@ npm install
 cd ../src-cordova
 npm install
 ```
-4. Build
+4. Modify Github API plugin
 ```
 cd ..
+rm node_modules/github-api/dist/components/Repository.js
+cp Repository_modified.js node_modules/github-api/dist/components/Repository.js
+```
+5. Build
+```
 # Desktop verison
 quasar build -m electron [-T darwin] [-T win32] [-T linux]
 # Mobile version
@@ -69,11 +74,11 @@ quasar build -m cordova [-T android] [-T ios]
 
 ## TODO
 - [x] Settings for max sync item
-- [ ] Settings for launch on system boot on desktop
-- [ ] Settings for copied notification
+- [x] Settings for launch on system boot on desktop
+- [x] Settings for copied notification
 - [ ] Settings for upload interval
 - [ ] Settings for network connection on mobile
-- [ ] About page
+- [x] About page
 - [ ] Localization (US, zhCN)
 - [ ] Delete local item
 - [ ] Delete related Github item
@@ -89,13 +94,14 @@ quasar build -m cordova [-T android] [-T ios]
 - [ ] Linux build
 
 ## Credits
-1. [Quasar Framework](https://github.com/quasarframework/quasar)
-2. [github-tools/github](https://github.com/github-tools/github)
+- [Quasar Framework](https://github.com/quasarframework/quasar)
+- [github-tools/github](https://github.com/github-tools/github)
     - *getBlob function at line 212 in node_modules/github-api/dist/components/Repository.js is modified in order to get base64 string for binary files*
     - *_getContentObject function at line 404 in node_modules/github-api/dist/components/Repository.js is modified to avoid duplicate utf8 encoding*
-3. [j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
-4. [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
-5. [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
+- [j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
+- [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
+- [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
+- [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
 
 ## Donation
 [Paypal](https://paypal.me/logictan)

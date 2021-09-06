@@ -23,19 +23,19 @@
 ## 截图
 Android:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/android.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/android.png?raw=true" width="600">
 
 Mac:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/mac.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/mac.png?raw=true" width="600">
 
 Windows:
 
-![](https://github.com/dale0525/ClipBroad/blob/3f675dad97854aebab2d3e357c1fe55501758a74/screenshot/win.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/win.png?raw=true" width="600">
 
 Github私人仓库:
 
-![](https://github.com/dale0525/ClipBroad/blob/d7c47d37ba073998caa1c8bfda457d23acd7f135/screenshot/GithubPrivateRepo.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/GithubPrivateRepo.png?raw=true" width="600">
 
 
 ## 编译
@@ -56,9 +56,14 @@ npm install
 cd ../src-cordova
 npm install
 ```
-4. 编译
+4. 修改Github API插件
 ```
 cd ..
+rm node_modules/github-api/dist/components/Repository.js
+cp Repository_modified.js node_modules/github-api/dist/components/Repository.js
+```
+5. 编译
+```
 # 桌面版
 quasar build -m electron [-T darwin] [-T win32] [-T linux]
 # 手机版
@@ -67,11 +72,11 @@ quasar build -m cordova [-T android] [-T ios]
 
 ## 待办
 - [x] 设置最大同步条数
-- [ ] 设置桌面端开机启动
-- [ ] 设置是否显示已复制的提醒
+- [x] 设置桌面端开机启动
+- [x] 设置是否显示已复制的提醒
 - [ ] 设置上传间隔
 - [ ] 移动端设置网络情况
-- [ ] 关于页面
+- [x] 关于页面
 - [ ] 本地化（中、英）
 - [ ] 删除本地记录
 - [ ] 删除对应的Github记录
@@ -87,14 +92,15 @@ quasar build -m cordova [-T android] [-T ios]
 - [ ] Linux打包
 
 ## 感谢
-1. [Quasar Framework](https://github.com/quasarframework/quasar)
-2. [github-tools/github](https://github.com/github-tools/github)
+- [Quasar Framework](https://github.com/quasarframework/quasar)
+- [github-tools/github](https://github.com/github-tools/github)
     - *修改了node_modules/github-api/dist/components/Repository.js文件212行的getBlob方法，以获得二进制文件的base64字符串*
     - *修改了node_modules/github-api/dist/components/Repository.js文件404行的_getContentObject方法，避免重复utf8编码*
-3. [j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
-4. [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
-5. [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
+- [j3k0/cordova-plugin-openwith](https://github.com/j3k0/cordova-plugin-openwith)
+- [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
+- [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
+- [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
 
 ## 赞助
-![](https://github.com/dale0525/ClipBroad/blob/4e9d4aa213f37cb4c6c69971229af1ec08b2351d/screenshot/donation_alipay.png)
-![](https://github.com/dale0525/ClipBroad/blob/4e9d4aa213f37cb4c6c69971229af1ec08b2351d/screenshot/donation_wechat.png)
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_alipay.png?raw=true" width="200">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/donation_wechat.png?raw=true" width="200">
