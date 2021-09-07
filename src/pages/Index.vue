@@ -152,7 +152,9 @@
                                     'clipbroad-show-copied-notification'
                                 ) === true
                             )
-                                window.myAPI.showNotification(this.$t('copied'));
+                                window.myAPI.showNotification(
+                                    this.$t('copied')
+                                );
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             // this.$q.notify('Not supported!');
@@ -182,7 +184,6 @@
             isCellular() {
                 if (this.$q.platform.is.electron) return false;
                 var networkState = navigator.connection.type;
-                console.log(networkState);
                 if (
                     [
                         Connection.CELL_2G,
@@ -195,6 +196,7 @@
                 return false;
             },
             isConnected() {
+                if (this.$q.platform.is.electron) return true;
                 var networkState = navigator.connection.type;
                 return networkState == Connection.NONE ? false : true;
             },
@@ -213,15 +215,13 @@
                     ) !== true &&
                     this.isCellular()
                 ) {
-                    this.$q.notify(
-                        this.$t('syncUntilWifi')
-                    );
+                    this.$q.notify(this.$t('syncUntilWifi'));
                     return false;
                 }
                 return true;
             },
             updateFromGithub() {
-                if (!this.shouldSync) return;
+                if (!this.shouldSync()) return;
                 this.$q.notify(this.$t('updating'));
                 this.$githubInstance.githubRepo
                     .getContents('main', '', true)
@@ -300,7 +300,7 @@
             },
             uploadToGithub() {
                 return new Promise((resolve, reject) => {
-                    if (!this.shouldSync) {
+                    if (!this.shouldSync()) {
                         resolve();
                         return;
                     }
