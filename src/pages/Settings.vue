@@ -85,6 +85,18 @@
                 />
             </div>
             <div>
+                <q-toggle
+                    v-if="$q.platform.is.cordova"
+                    v-model="syncUseMobileData"
+                    checked-icon="check"
+                    color="green"
+                    unchecked-icon="clear"
+                    label="Sync using mobile data"
+                    left-label
+                    class="q-mb-md"
+                />
+            </div>
+            <div>
                 <q-select
                     label="Max Sync Items"
                     transition-show="jump-up"
@@ -109,10 +121,10 @@
             <q-separator />
         </div>
         <div class="col q-pa-md items-center">
-            <div>
+            <div class="q-pa-md">
                 Version <q-badge color="primary">{{ version }}</q-badge>
             </div>
-            <div>
+            <div class="q-pa-md">
                 Resources
                 <q-chip
                     clickable
@@ -133,7 +145,7 @@
                     Blog
                 </q-chip>
             </div>
-            <div>
+            <div class="q-pa-md">
                 Donation
                 <q-chip
                     clickable
@@ -200,6 +212,13 @@
                           'clipbroad-show-copied-notification'
                       )
                     : true,
+                syncUseMobileData: this.$q.localStorage.has(
+                    'clipbroad-use-mobile-data'
+                )
+                    ? this.$q.localStorage.getItem(
+                          'clipbroad-use-mobile-data'
+                      )
+                    : false,
                 maxItem: this.$q.localStorage.has('clipbroad-max-item')
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
                     : 40,
@@ -324,6 +343,12 @@
             showCopiedNotification: function (val) {
                 this.$q.localStorage.set(
                     'clipbroad-show-copied-notification',
+                    val
+                );
+            },
+            syncUseMobileData: function (val) {
+                this.$q.localStorage.set(
+                    'clipbroad-use-mobile-data',
                     val
                 );
             },

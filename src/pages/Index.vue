@@ -97,28 +97,16 @@
                 if (seconds <= 0) {
                     return 'Right Now';
                 } else if (seconds < 60) {
-                    return (
-                        seconds.toString() +
-                        's ago'
-                    );
+                    return seconds.toString() + 's ago';
                 } else if (seconds < 3600) {
                     const minutes = parseInt(seconds / 60);
-                    return (
-                        minutes.toString() +
-                        'm ago'
-                    );
+                    return minutes.toString() + 'm ago';
                 } else if (seconds < 3600 * 24) {
                     const hours = parseInt(seconds / 3600);
-                    return (
-                        hours.toString() +
-                        'h ago'
-                    );
+                    return hours.toString() + 'h ago';
                 } else {
                     const days = parseInt(seconds / 3600 / 24);
-                    return (
-                        days.toString() +
-                        'd ago'
-                    );
+                    return days.toString() + 'd ago';
                 }
             },
             itemIcon(type) {
@@ -191,12 +179,49 @@
                     this.$q.dark.set(darkMode);
                 }
             },
-            updateFromGithub() {
-                this.$q.notify('Updating...');
+            isCellular() {
+                if (this.$q.platform.is.electron) return false;
+                var networkState = navigator.connection.type;
+                if (
+                    [
+                        Connection.CELL_2G,
+                        Connection.CELL_3G,
+                        Connection.CELL_4G,
+                        Connection.CELL,
+                    ].includes(networkState)
+                )
+                    return true;
+                return false;
+            },
+            isConnected() {
+                var networkState = navigator.connection.type;
+                return networkState == Connection.NONE ? false : true;
+            },
+            shouldSync() {
                 if (!this.$githubInstance.githubRepoExist) {
                     console.log('github repo does not exist');
-                    return;
+                    return false;
                 }
+                if (!this.isConnected()) {
+                    this.$q.notify('No network connection.');
+                    return false;
+                }
+                if (
+                    this.$q.localStorage.getItem(
+                        'clipbroad-use-mobile-data'
+                    ) !== true &&
+                    this.isCellular()
+                ) {
+                    this.$q.notify(
+                        'Sync will recover upon connecting to wifi.'
+                    );
+                    return false;
+                }
+                return true;
+            },
+            updateFromGithub() {
+                if (!this.shouldSync) return;
+                this.$q.notify('Updating...');
                 this.$githubInstance.githubRepo
                     .getContents('main', '', true)
                     .then(({ data }) => {
@@ -262,31 +287,7 @@
                                 type: 'blob',
                             });
                         }
-                        let ghsha;
-                        this.GetSha()
-                            .then((data) => {
-                                ghsha = data;
-                            })
-                            .then(() =>
-                                this.$githubInstance.githubRepo.createTree(
-                                    treeItems,
-                                    ghsha.commit
-                                )
-                            )
-                            .then(({ data }) => {
-                                return this.$githubInstance.githubRepo.commit(
-                                    ghsha.parent,
-                                    data.sha,
-                                    'delete files'
-                                );
-                            })
-                            .then(({ data }) => {
-                                this.$githubInstance.githubRepo.updateHead(
-                                    'heads/main',
-                                    data.sha,
-                                    true
-                                );
-                            })
+                        this.uploadTree(treeItems)
                             .then(() => {
                                 toDeleteRemote = 0;
                                 console.log('delete complete');
@@ -296,13 +297,13 @@
                             });
                     });
             },
-            UploadToGithub() {
+            uploadToGithub() {
                 return new Promise((resolve, reject) => {
-                    console.log('uploading to github');
-                    if (!this.$githubInstance.githubRepoExist) {
-                        console.log('github repo does not exist');
+                    if (!this.shouldSync) {
+                        resolve();
                         return;
                     }
+                    console.log('uploading to github');
                     let treeItems = [];
                     let toUpload = [];
                     // console.log(this.items);
@@ -357,33 +358,11 @@
                                         type: 'blob',
                                     });
                                     if (treeItems.length == toUpload.length) {
-                                        let ghsha;
-                                        this.GetSha()
-                                            .then((data) => {
-                                                ghsha = data;
-                                            })
-                                            .then(() =>
-                                                this.$githubInstance.githubRepo.createTree(
-                                                    treeItems,
-                                                    ghsha.commit
-                                                )
-                                            )
-                                            .then(({ data }) => {
-                                                return this.$githubInstance.githubRepo.commit(
-                                                    ghsha.parent,
-                                                    data.sha,
-                                                    'update'
-                                                );
-                                            })
-                                            .then(({ data }) => {
-                                                this.$githubInstance.githubRepo.updateHead(
-                                                    'heads/main',
-                                                    data.sha,
-                                                    true
-                                                );
-                                            })
+                                        this.uploadTree(treeItems)
                                             .then(() => {
-                                                this.$q.notify('Upload completed.');
+                                                this.$q.notify(
+                                                    'Upload completed.'
+                                                );
                                                 resolve();
                                             })
                                             .catch((error) => {
@@ -400,7 +379,42 @@
                     }
                 });
             },
-            GetSha() {
+            uploadTree(treeItems) {
+                return new Promise((resolve, reject) => {
+                    let ghsha;
+                    this.getSha()
+                        .then((data) => {
+                            ghsha = data;
+                        })
+                        .then(() =>
+                            this.$githubInstance.githubRepo.createTree(
+                                treeItems,
+                                ghsha.commit
+                            )
+                        )
+                        .then(({ data }) => {
+                            return this.$githubInstance.githubRepo.commit(
+                                ghsha.parent,
+                                data.sha,
+                                'update'
+                            );
+                        })
+                        .then(({ data }) => {
+                            this.$githubInstance.githubRepo.updateHead(
+                                'heads/main',
+                                data.sha,
+                                true
+                            );
+                        })
+                        .then(() => {
+                            resolve();
+                        })
+                        .catch((error) => {
+                            reject(error);
+                        });
+                });
+            },
+            getSha() {
                 return new Promise((resolve, reject) => {
                     let refSha;
                     let commitSha;
@@ -434,18 +448,18 @@
                     this.checkClipboard,
                     500
                 );
-                const UploadToGithubInterval = setInterval(
-                    this.UploadToGithub,
+                const uploadToGithubInterval = setInterval(
+                    this.uploadToGithub,
                     30000
                 );
                 timers.push(checkClipboardInterval);
-                timers.push(UploadToGithubInterval);
+                timers.push(uploadToGithubInterval);
             },
             syncNow(done) {
                 if (!this.$githubInstance.githubRepoExist) {
                     this.$router.push('/settings');
                 } else {
-                    this.UploadToGithub().then(() => {
+                    this.uploadToGithub().then(() => {
                         this.updateFromGithub();
                         setTimeout(done, 1000);
                     });
