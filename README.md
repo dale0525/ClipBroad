@@ -78,9 +78,9 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Settings for max sync item
 - [x] Settings for launch on system boot on desktop
 - [x] Settings for copied notification
-- [ ] Settings for network connection on mobile
+- [x] Settings for network connection on mobile
 - [x] About page
-- [ ] Localization (US, zhCN)
+- [x] Localization (US, zhCN)
 - [ ] Delete local item
 - [ ] Delete related Github item
 - [ ] Support other common binary files

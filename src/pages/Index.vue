@@ -135,13 +135,13 @@
                                 ) === true
                             )
                                 window.myAPI.showNotification(
-                                    'Item copied!',
+                                    this.$t('copied'),
                                     item.value
                                 );
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             cordova.plugins.clipboard.copy(item.value);
-                            this.$q.notify('Copied!');
+                            this.$q.notify(this.$t('copied'));
                         }
                         break;
                     case 'png':
@@ -152,7 +152,7 @@
                                     'clipbroad-show-copied-notification'
                                 ) === true
                             )
-                                window.myAPI.showNotification('Item copied!');
+                                window.myAPI.showNotification(this.$t('copied'));
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             // this.$q.notify('Not supported!');
@@ -182,6 +182,7 @@
             isCellular() {
                 if (this.$q.platform.is.electron) return false;
                 var networkState = navigator.connection.type;
+                console.log(networkState);
                 if (
                     [
                         Connection.CELL_2G,
@@ -203,7 +204,7 @@
                     return false;
                 }
                 if (!this.isConnected()) {
-                    this.$q.notify('No network connection.');
+                    this.$q.notify(this.$t('noNetwork'));
                     return false;
                 }
                 if (
@@ -213,7 +214,7 @@
                     this.isCellular()
                 ) {
                     this.$q.notify(
-                        'Sync will recover upon connecting to wifi.'
+                        this.$t('syncUntilWifi')
                     );
                     return false;
                 }
@@ -221,13 +222,13 @@
             },
             updateFromGithub() {
                 if (!this.shouldSync) return;
-                this.$q.notify('Updating...');
+                this.$q.notify(this.$t('updating'));
                 this.$githubInstance.githubRepo
                     .getContents('main', '', true)
                     .then(({ data }) => {
                         toDeleteRemote = Math.max(
                             data.length - maxItemLength,
-                            toDeleteRemote
+                            0
                         );
                         const settingsMax = this.$q.localStorage.has(
                             'clipbroad-max-item'
@@ -361,19 +362,19 @@
                                         this.uploadTree(treeItems)
                                             .then(() => {
                                                 this.$q.notify(
-                                                    'Upload completed.'
+                                                    this.$t('uploaded')
                                                 );
                                                 resolve();
                                             })
                                             .catch((error) => {
                                                 this.$q.notify(error);
-                                                reject();
+                                                reject(error);
                                             });
                                     }
                                 })
                                 .catch((error) => {
                                     this.$q.notify(error);
-                                    reject();
+                                    reject(error);
                                 });
                         })(i);
                     }
@@ -480,7 +481,7 @@
                                         );
                                     } else {
                                         this.$q.notify(
-                                            'This file type is not supported'
+                                            this.$t('fileTypeNotSupported')
                                         );
                                     }
 
@@ -493,7 +494,7 @@
                         openWithInited = true;
                     },
                     () => {
-                        this.$q.notify('openwith plugin init failed');
+                        console.log('openwith plugin init failed');
                     }
                 );
             },
@@ -530,6 +531,7 @@
             this.resetTimer();
         },
         created() {
+            this.$i18n.locale = this.$q.lang.getLocale();
             this.setDarkMode();
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow, false);

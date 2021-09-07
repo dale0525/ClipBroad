@@ -21,7 +21,7 @@ module.exports = configure(function (ctx) {
         // app boot file (/src/boot)
         // --> boot files are part of "main.js"
         // https://v2.quasar.dev/quasar-cli/boot-files
-        boot: ['axios', 'github'],
+        boot: ['axios', 'github', 'i18n'],
 
         // https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
         css: ['app.css'],
@@ -69,6 +69,23 @@ module.exports = configure(function (ctx) {
             },
             env: {
                 VERSION: version,
+            },
+            extendWebpack(cfg) {
+                // for i18n resources (json/json5/yaml)
+                cfg.module.rules.push({
+                    test: /\.(json5?|ya?ml)$/, // target json, json5, yaml and yml files
+                    type: 'javascript/auto',
+                    // Use `Rule.include` to specify the files of locale messages to be pre-compiled
+                    include: [path.resolve(__dirname, './src/i18n')],
+                    loader: '@intlify/vue-i18n-loader',
+                });
+
+                // for i18n custom block
+                cfg.module.rules.push({
+                    resourceQuery: /blockType=i18n/,
+                    type: 'javascript/auto',
+                    loader: '@intlify/vue-i18n-loader',
+                });
             },
         },
 

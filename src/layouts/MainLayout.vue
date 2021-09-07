@@ -12,13 +12,18 @@
                     @click="toggleLeftDrawer"
                 />
 
-                <q-toolbar-title class="absolute-center"> ClipBroad </q-toolbar-title>
+                <q-toolbar-title class="absolute-center">
+                    ClipBroad
+                </q-toolbar-title>
 
                 <!-- <div>Quasar v{{ $q.version }}</div> -->
             </q-toolbar>
         </q-header>
 
-        <q-footer elevated v-if="$q.platform.is.cordova || $q.platform.is.mobile">
+        <q-footer
+            elevated
+            v-if="$q.platform.is.cordova || $q.platform.is.mobile"
+        >
             <q-tabs>
                 <Footer
                     v-for="footer in footers"
@@ -35,9 +40,7 @@
             class="bg-grey-1"
         >
             <q-list>
-                <q-item-label header class="text-grey-8">
-                    Navigation
-                </q-item-label>
+                <q-item-label header class="text-grey-8"> </q-item-label>
 
                 <Navigation
                     v-for="link in navigations"
@@ -58,32 +61,6 @@
     import Navigation from 'src/components/Navigation.vue';
     import Footer from 'src/components/Footer.vue';
 
-    const navigationList = [
-        {
-            title: 'Clipboard History',
-            icon: 'history',
-            to: '/',
-        },
-        {
-            title: 'Settings',
-            icon: 'settings',
-            to: '/settings',
-        },
-    ];
-
-    const footersList = [
-        {
-            label: 'History',
-            icon: 'history',
-            to: '/',
-        },
-        {
-            label: 'Settings',
-            icon: 'settings',
-            to: '/settings',
-        },
-    ];
-
     import { defineComponent, ref } from 'vue';
 
     export default defineComponent({
@@ -94,12 +71,41 @@
             Footer,
         },
 
+        computed: {
+            navigations() {
+                return [
+                    {
+                        title: this.$t('clipboardHistory'),
+                        icon: 'history',
+                        to: '/',
+                    },
+                    {
+                        title: this.$t('settings'),
+                        icon: 'settings',
+                        to: '/settings',
+                    },
+                ];
+            },
+            footers() {
+                return [
+                    {
+                        label: this.$t('clipboardHistory'),
+                        icon: 'history',
+                        to: '/',
+                    },
+                    {
+                        label: this.$t('settings'),
+                        icon: 'settings',
+                        to: '/settings',
+                    },
+                ];
+            },
+        },
+
         setup() {
             const leftDrawerOpen = ref(false);
 
             return {
-                navigations: navigationList,
-                footers: footersList,
                 leftDrawerOpen,
                 toggleLeftDrawer() {
                     leftDrawerOpen.value = !leftDrawerOpen.value;

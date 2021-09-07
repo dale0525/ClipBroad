@@ -10,7 +10,7 @@
                     v-if="showLoginBtn"
                     color="primary"
                     icon="login"
-                    label="Login With Github"
+                    :label="$t('githubLogin')"
                     @click="auth()"
                 />
             </transition>
@@ -30,13 +30,13 @@
                             username
                         }}</q-item-label>
                         <q-item-label caption v-if="rateLimit">{{
-                            'Limit: ' +
+                            $t('githubAPILimit') +
                             rateLimit.current +
                             ' / ' +
                             rateLimit.limit
                         }}</q-item-label>
                         <q-item-label caption v-if="rateLimit">{{
-                            'Reset in: ' + rateLimit.time + 's'
+                            $t('githubAPIReset') + rateLimit.time + 's'
                         }}</q-item-label>
                     </q-item-section>
                     <q-menu anchor="center middle" self="center middle">
@@ -56,7 +56,7 @@
                     checked-icon="check"
                     color="green"
                     unchecked-icon="clear"
-                    label="Hide dock icon"
+                    :label="$t('hideDockIcon')"
                     left-label
                 />
             </div>
@@ -67,7 +67,7 @@
                     checked-icon="check"
                     color="green"
                     unchecked-icon="clear"
-                    label="Launch with system"
+                    :label="$t('launchWithSystem')"
                     left-label
                     class="q-mb-md"
                 />
@@ -79,7 +79,7 @@
                     checked-icon="check"
                     color="green"
                     unchecked-icon="clear"
-                    label="Show notification when items are copied"
+                    :label="$t('copyNotification')"
                     left-label
                     class="q-mb-md"
                 />
@@ -91,14 +91,14 @@
                     checked-icon="check"
                     color="green"
                     unchecked-icon="clear"
-                    label="Sync using mobile data"
+                    :label="$t('useCellular')"
                     left-label
                     class="q-mb-md"
                 />
             </div>
             <div>
                 <q-select
-                    label="Max Sync Items"
+                    :label="$t('maxItem')"
                     transition-show="jump-up"
                     transition-hide="jump-up"
                     filled
@@ -111,8 +111,7 @@
                         self="bottom middle"
                         :offset="[10, 10]"
                     >
-                        Due to duplication, the actual items in History may be
-                        less than this amount.
+                        {{ $t('maxItemTip') }}
                     </q-tooltip>
                 </q-select>
             </div>
@@ -122,10 +121,11 @@
         </div>
         <div class="col q-pa-md items-center">
             <div class="q-pa-md">
-                Version <q-badge color="primary">{{ version }}</q-badge>
+                {{ $t('version') }}
+                <q-badge color="primary">{{ version }}</q-badge>
             </div>
             <div class="q-pa-md">
-                Resources
+                {{ $t('link') }}
                 <q-chip
                     clickable
                     @click="
@@ -146,7 +146,7 @@
                 </q-chip>
             </div>
             <div class="q-pa-md">
-                Donation
+                {{ $t('donation') }}
                 <q-chip
                     clickable
                     @click="openExternalURL('https://paypal.me/logictan')"
@@ -215,9 +215,7 @@
                 syncUseMobileData: this.$q.localStorage.has(
                     'clipbroad-use-mobile-data'
                 )
-                    ? this.$q.localStorage.getItem(
-                          'clipbroad-use-mobile-data'
-                      )
+                    ? this.$q.localStorage.getItem('clipbroad-use-mobile-data')
                     : false,
                 maxItem: this.$q.localStorage.has('clipbroad-max-item')
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
@@ -347,10 +345,7 @@
                 );
             },
             syncUseMobileData: function (val) {
-                this.$q.localStorage.set(
-                    'clipbroad-use-mobile-data',
-                    val
-                );
+                this.$q.localStorage.set('clipbroad-use-mobile-data', val);
             },
             maxItem: function (val) {
                 this.$q.localStorage.set('clipbroad-max-item', val);
