@@ -81,8 +81,8 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Settings for network connection on mobile
 - [x] About page
 - [x] Localization (US, zhCN)
-- [ ] Delete local item
-- [ ] Delete related Github item
+- [x] Delete local item
+- [x] Delete related Github item
 - [ ] Support other common binary files
 - [ ] Settings for dark mode
 - [ ] Settings for desktop shortcut

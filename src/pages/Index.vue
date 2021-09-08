@@ -13,7 +13,30 @@
                         clickable
                         v-ripple
                         @dblclick="copyItem(index)"
+                        v-touch-hold:300.mouse="
+                            () => {
+                                toggleActionBtn = true;
+                            }
+                        "
                     >
+                        <q-item-section avatar v-if="toggleActionBtn">
+                            <q-checkbox
+                                v-model="toDeleteItems"
+                                :val="index"
+                                color="orange"
+                                @click="
+                                    () => {
+                                        if (
+                                            toDeleteItems.length == items.length
+                                        ) {
+                                            isAllSelected = true;
+                                        } else {
+                                            isAllSelected = null;
+                                        }
+                                    }
+                                "
+                            />
+                        </q-item-section>
                         <q-item-section avatar>
                             <q-icon
                                 color="primary"
@@ -42,6 +65,43 @@
                     </q-item>
                 </transition-group>
             </q-list>
+            <q-toolbar class="fixed-bottom bg-primary" v-if="toggleActionBtn">
+                <div class="absolute-bottom-left" v-if="toggleActionBtn">
+                    <q-item-section avatar>
+                        <q-checkbox
+                            :indeterminate-value="null"
+                            size="xl"
+                            class="q-mx-lg"
+                            v-model="isAllSelected"
+                            color="orange"
+                            @click="selectAll()"
+                        />
+                    </q-item-section>
+                </div>
+                <div class="absolute-bottom-right">
+                    <q-btn
+                        fab
+                        icon="delete"
+                        color="orange"
+                        v-if="showDeleteBtn"
+                        class="q-ma-md"
+                        @click="deleteSelected()"
+                    />
+                    <q-btn
+                        fab
+                        icon="close"
+                        color="primary"
+                        class="q-ma-md"
+                        @click="
+                            () => {
+                                toDeleteItems = [];
+                                toggleActionBtn = false;
+                                isAllSelected = false;
+                            }
+                        "
+                    />
+                </div>
+            </q-toolbar>
         </q-page>
     </q-pull-to-refresh>
 </template>
@@ -56,16 +116,27 @@
     var existEventListen = false;
     var openWithInited = false;
     var toDeleteRemote = 0;
+    var uploading = false;
 
     export default defineComponent({
+        data() {
+            return {
+                toDeleteItems: [],
+                toggleActionBtn: false,
+                isAllSelected: false,
+            };
+        },
         computed: {
             ...mapState('clipboard', ['items']),
             ...mapGetters('clipboard', ['lastLocalItem']),
+            showDeleteBtn() {
+                return this.toDeleteItems.length > 0 ? true : false;
+            },
         },
         methods: {
             ...mapActions('clipboard', [
                 'addItem',
-                'filterItem',
+                'addRelatedItem',
                 'removeItem',
                 'setItemUploaded',
             ]),
@@ -249,13 +320,28 @@
                                 if (nameSplit.length < 2) return;
                                 let fileType =
                                     fullName.length < 2 ? 'text' : fullName[1]; //name extension as file type
-                                let newTime = parseInt(nameSplit[0]);
-                                let newMD5 = nameSplit[1];
-                                let oldValue = this.items.find(
+                                let remoteTime = parseInt(nameSplit[0]);
+                                let remoteMD5 = nameSplit[1];
+                                let localItemIndex = this.items.findIndex(
                                     (item) => item.md5 == nameSplit[1]
                                 );
-                                if (oldValue != null && oldValue.time > newTime)
+                                if (
+                                    localItemIndex >= 0 &&
+                                    this.items[localItemIndex].time > remoteTime
+                                ) {
+                                    this.addRelatedItem({
+                                        index: localItemIndex,
+                                        item: {
+                                            time: remoteTime,
+                                            md5: remoteMD5,
+                                            uploaded: true,
+                                            value: null,
+                                            type: null,
+                                            source: null,
+                                        },
+                                    });
                                     return;
+                                }
                                 fetchedItems++;
                                 let sha = data[i].sha;
                                 let raw = fileType == 'text' ? true : false;
@@ -266,14 +352,14 @@
                                             fileType == 'text'
                                                 ? data
                                                 : data.content;
-                                        this.filterItem(newMD5);
                                         this.addItem({
-                                            time: newTime,
-                                            md5: newMD5,
+                                            time: remoteTime,
+                                            md5: remoteMD5,
                                             uploaded: true,
                                             value: dataValue,
                                             type: fileType,
                                             source: 'remote',
+                                            relatedItems: [],
                                         });
                                     });
                             })(i);
@@ -304,7 +390,12 @@
                         resolve();
                         return;
                     }
+                    if (uploading) {
+                        resolve();
+                        return;
+                    }
                     console.log('uploading to github');
+                    uploading = true;
                     let treeItems = [];
                     let toUpload = [];
                     // console.log(this.items);
@@ -329,18 +420,13 @@
                     // }
                     for (var i = 0; i < toUpload.length; i++) {
                         ((i) => {
-                            let fileName =
-                                toUpload[i].time.toString() +
-                                '-' +
-                                toUpload[i].md5;
+                            let itemPath = this.getItemPath(toUpload[i]);
                             let content = toUpload[i].value;
                             switch (toUpload[i].type) {
                                 case 'png':
-                                    fileName += '.png';
                                     content = Buffer.from(content, 'base64');
                                     break;
                                 default:
-                                    fileName += '-text';
                                     break;
                             }
                             // filePath = path.join(
@@ -354,26 +440,30 @@
                                 .then(({ data }) => {
                                     treeItems.push({
                                         sha: data.sha,
-                                        path: fileName,
+                                        path: itemPath,
                                         mode: '100644',
                                         type: 'blob',
                                     });
                                     if (treeItems.length == toUpload.length) {
                                         this.uploadTree(treeItems)
                                             .then(() => {
-                                                this.$q.notify(
-                                                    this.$t('uploaded')
-                                                );
+                                                // this.$q.notify(
+                                                //     this.$t('uploaded')
+                                                // );
                                                 resolve();
                                             })
                                             .catch((error) => {
-                                                this.$q.notify(error);
+                                                console.log(error);
+                                                this.$q.notify(
+                                                    this.$t('error')
+                                                );
                                                 reject(error);
                                             });
                                     }
                                 })
                                 .catch((error) => {
-                                    this.$q.notify(error);
+                                    console.log(error);
+                                    this.$q.notify(this.$t('error'));
                                     reject(error);
                                 });
                         })(i);
@@ -382,6 +472,7 @@
             },
             uploadTree(treeItems) {
                 return new Promise((resolve, reject) => {
+                    uploading = true;
                     let ghsha;
                     this.getSha()
                         .then((data) => {
@@ -408,9 +499,11 @@
                             );
                         })
                         .then(() => {
+                            uploading = false;
                             resolve();
                         })
                         .catch((error) => {
+                            uploading = false;
                             reject(error);
                         });
                 });
@@ -506,7 +599,6 @@
                         (this.lastLocalItem != null &&
                             this.lastLocalItem.md5 != md5))
                 ) {
-                    this.filterItem(md5);
                     this.addItem({
                         time: new Date().getTime(),
                         value: data,
@@ -514,7 +606,83 @@
                         uploaded: false,
                         type: type,
                         source: source,
+                        relatedItems: [],
                     });
+                }
+            },
+            getItemPath(item) {
+                let itemPath = item.time.toString() + '-' + item.md5;
+                switch (item.type) {
+                    case 'png':
+                        itemPath += '.png';
+                        break;
+                    default:
+                        itemPath += '-text';
+                        break;
+                }
+                return itemPath;
+            },
+            deleteSelected() {
+                if (this.toDeleteItems.length > 0) {
+                    uploading = true;
+                    let treeItems = [];
+                    for (let i = 0; i < this.toDeleteItems.length; i++) {
+                        if (this.items[this.toDeleteItems[i]].uploaded) {
+                            treeItems.push({
+                                sha: null,
+                                path: this.getItemPath(
+                                    this.items[this.toDeleteItems[i]]
+                                ),
+                                mode: '100644',
+                                type: 'blob',
+                            });
+                        }
+                        if (
+                            this.items[this.toDeleteItems[i]].relatedItems
+                                .length > 0
+                        ) {
+                            for (
+                                let j = 0;
+                                j <
+                                this.items[this.toDeleteItems[i]].relatedItems
+                                    .length;
+                                j++
+                            ) {
+                                treeItems.push({
+                                    sha: null,
+                                    path: this.getItemPath(
+                                        this.items[this.toDeleteItems[i]]
+                                            .relatedItems[j]
+                                    ),
+                                    mode: '100644',
+                                    type: 'blob',
+                                });
+                            }
+                        }
+                    }
+                    this.toDeleteItems.forEach((index) => {
+                        this.removeItem(index);
+                    });
+                    this.toDeleteItems = [];
+                    this.$q.notify(this.$t('deleting'));
+                    this.uploadTree(treeItems)
+                        .then(() => {
+                            this.$q.notify(this.$t('deleted'));
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                            this.$q.notify(this.$t('error'));
+                        });
+                }
+                this.toggleActionBtn = false;
+                this.isAllSelected = false;
+            },
+            selectAll() {
+                this.toDeleteItems = [];
+                if (this.isAllSelected === true) {
+                    for (let i = 0; i < this.items.length; i++) {
+                        this.toDeleteItems.push(i);
+                    }
                 }
             },
         },

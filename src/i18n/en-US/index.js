@@ -19,4 +19,7 @@ export default {
     fileTypeNotSupported: 'This file type is not supported.',
     clipboardHistory: 'Clipboard History',
     settings: 'Settings',
+    deleting: 'Deleting...',
+    deleted: 'Items deleted!',
+    error: 'An error occurred.',
 };

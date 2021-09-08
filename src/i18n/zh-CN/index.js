@@ -19,4 +19,7 @@ export default {
     fileTypeNotSupported: '暂不支持此文件类型',
     clipboardHistory: '剪贴板历史',
     settings: '设置',
+    deleting: '删除中...',
+    deleted: '已删除！',
+    error: '发生未知错误',
 };
