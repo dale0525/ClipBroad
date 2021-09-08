@@ -411,6 +411,7 @@
                     // console.log(toUpload);
                     if (toUpload.length <= 0) {
                         console.log('no item to upload');
+                        uploading = false;
                         resolve();
                         return;
                     }
@@ -622,8 +623,15 @@
                 }
                 return itemPath;
             },
-            deleteSelected() {
+            deleteSelected(notify = true) {
                 if (this.toDeleteItems.length > 0) {
+                    if (notify) this.$q.notify(this.$t('deleting'));
+                    if (uploading) {
+                        setTimeout(() => {
+                            this.deleteSelected(false);
+                        }, 1000);
+                        return;
+                    }
                     let treeItems = [];
                     this.toDeleteItems.sort(function (a, b) {
                         return a - b;
@@ -662,7 +670,6 @@
                             }
                         }
                     }
-                    this.$q.notify(this.$t('deleting'));
                     if (treeItems.length > 0) {
                         this.uploadTree(treeItems)
                             .then(() => {
