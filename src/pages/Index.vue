@@ -13,7 +13,7 @@
                         clickable
                         v-ripple
                         @dblclick="copyItem(index)"
-                        v-touch-hold:300.mouse="
+                        v-touch-hold:500.mouse="
                             () => {
                                 toggleActionBtn = true;
                             }
@@ -65,10 +65,11 @@
                     </q-item>
                 </transition-group>
             </q-list>
-            <q-toolbar class="fixed-bottom bg-primary" v-if="toggleActionBtn">
+            <q-toolbar style="z-index: 99999; height: 80px" class="fixed-bottom bg-black" v-if="toggleActionBtn">
                 <div class="absolute-bottom-left" v-if="toggleActionBtn">
                     <q-item-section avatar>
                         <q-checkbox
+                            keep-color
                             :indeterminate-value="null"
                             size="xl"
                             class="q-mx-lg"
