@@ -624,8 +624,10 @@
             },
             deleteSelected() {
                 if (this.toDeleteItems.length > 0) {
-                    uploading = true;
                     let treeItems = [];
+                    this.toDeleteItems.sort(function (a, b) {
+                        return a - b;
+                    });
                     for (let i = 0; i < this.toDeleteItems.length; i++) {
                         if (this.items[this.toDeleteItems[i]].uploaded) {
                             treeItems.push({
@@ -660,19 +662,33 @@
                             }
                         }
                     }
-                    this.toDeleteItems.forEach((index) => {
-                        this.removeItem(index);
-                    });
-                    this.toDeleteItems = [];
                     this.$q.notify(this.$t('deleting'));
-                    this.uploadTree(treeItems)
-                        .then(() => {
-                            this.$q.notify(this.$t('deleted'));
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                            this.$q.notify(this.$t('error'));
-                        });
+                    if (treeItems.length > 0) {
+                        this.uploadTree(treeItems)
+                            .then(() => {
+                                for (
+                                    let i = this.toDeleteItems.length - 1;
+                                    i >= 0;
+                                    i--
+                                ) {
+                                    this.removeItem(this.toDeleteItems[i]);
+                                }
+                                this.$q.notify(this.$t('deleted'));
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                this.$q.notify(this.$t('error'));
+                            });
+                    } else {
+                        for (
+                            let i = this.toDeleteItems.length - 1;
+                            i >= 0;
+                            i--
+                        ) {
+                            this.removeItem(this.toDeleteItems[i]);
+                        }
+                        this.$q.notify(this.$t('deleted'));
+                    }
                 }
                 this.toggleActionBtn = false;
                 this.isAllSelected = false;
