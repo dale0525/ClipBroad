@@ -43,20 +43,12 @@
                                 :name="itemIcon(item.type)"
                             />
                         </q-item-section>
-                        <q-item-section v-if="item.type == 'text'">
-                            <q-item-label lines="3">{{
-                                item.value
-                            }}</q-item-label>
-                        </q-item-section>
-                        <q-item-section v-if="item.type == 'png'"
-                            ><img
-                                :src="'data:image/png;base64,' + item.value"
-                                style="
-                                    max-height: 300px;
-                                    object-fit: contain;
-                                    max-width: 100%;
-                                "
-                        /></q-item-section>
+                        <ClipboardItem
+                            :type="item.type"
+                            :value="item.value"
+                            :key="item.md5"
+                            :fileName="item.fileName"
+                        />
                         <q-item-section side>
                             <q-item-label caption>{{
                                 prevTime(item.time)
@@ -65,7 +57,11 @@
                     </q-item>
                 </transition-group>
             </q-list>
-            <q-toolbar style="z-index: 99999; height: 80px" class="fixed-bottom bg-black" v-if="toggleActionBtn">
+            <q-toolbar
+                style="z-index: 99999; height: 80px"
+                class="fixed-bottom bg-black"
+                v-if="toggleActionBtn"
+            >
                 <div class="absolute-bottom-left" v-if="toggleActionBtn">
                     <q-item-section avatar>
                         <q-checkbox
@@ -109,8 +105,10 @@
 
 <script>
     import { defineComponent } from 'vue';
+    import ClipboardItem from 'src/components/ClipboardItem.vue';
     import { mapState, mapActions, mapGetters } from 'vuex';
     const SparkMD5 = require('spark-md5');
+    import { exportFile } from 'quasar';
     // import { Clipboard } from '@capacitor/clipboard';
     const maxItemLength = 500;
     var timers = [];
@@ -120,6 +118,10 @@
     var uploading = false;
 
     export default defineComponent({
+        components: {
+            ClipboardItem,
+        },
+
         data() {
             return {
                 toDeleteItems: [],
@@ -143,13 +145,14 @@
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
-                    const image = window.myAPI.readClipboardImage();
-                    if (image == null) {
-                        const text = window.myAPI.readClipboardText();
-                        this.addItemInternal(text, 'text');
-                    } else {
-                        this.addItemInternal(image, 'png');
-                    }
+                    const item = window.myAPI.readClipboard();
+                    if (item == null) return;
+                    this.addItemInternal(
+                        item.value,
+                        item.type,
+                        'local',
+                        item.fileName
+                    );
                 } else if (this.$q.platform.is.capacitor) {
                     Clipboard.read().then((data) => {
                         if (data.type == 'text/plain') {
@@ -187,8 +190,23 @@
                         return 'text_fields';
                     case 'png':
                         return 'image';
+                    case 'html':
+                        return 'code';
+                    case 'pdf':
+                        return 'picture_as_pdf';
+                    case 'gif':
+                        return 'gif_box';
+                    case 'zip':
+                    case '7z':
+                    case 'rar':
+                    case 'tar':
+                        return 'archive';
+                    case 'xlsx':
+                    case 'xls':
+                    case 'xlsm':
+                        return 'table_view';
                     default:
-                        return 'text_fields';
+                        return 'attachment';
                 }
             },
             copyItem(index) {
@@ -213,6 +231,35 @@
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
                             cordova.plugins.clipboard.copy(item.value);
+                            this.$q.notify(this.$t('copied'));
+                        }
+                        break;
+                    case 'html':
+                        this.removeItem(index);
+                        item.time = new Date().getTime();
+                        item.uploaded = false;
+                        this.addItem(item);
+                        if (this.$q.platform.is.electron) {
+                            window.myAPI.writeClipboardHTML(item.value);
+                            if (
+                                this.$q.localStorage.getItem(
+                                    'clipbroad-show-copied-notification'
+                                ) === true
+                            )
+                                window.myAPI.showNotification(
+                                    this.$t('copied'),
+                                    item.value
+                                );
+                            window.myAPI.hideWindow();
+                        } else if (this.$q.platform.is.cordova) {
+                            var temporalDivElement =
+                                document.createElement('div');
+                            temporalDivElement.innerHTML = item.value;
+                            cordova.plugins.clipboard.copy(
+                                temporalDivElement.textContent ||
+                                    temporalDivElement.innerText ||
+                                    ''
+                            );
                             this.$q.notify(this.$t('copied'));
                         }
                         break;
@@ -243,7 +290,49 @@
                             );
                         }
                         break;
+                    case 'gif':
+                        if (this.$q.platform.is.electron) {
+                            fetch('data:image/gif;base64,' + item.value)
+                                .then((response) => response.blob())
+                                .then((blob) => {
+                                    exportFile(
+                                        item.fileName + '.' + item.type,
+                                        blob
+                                    );
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                });
+                        } else if (this.$q.platform.is.cordova) {
+                            // this.$q.notify('Not supported!');
+                            window.plugins.socialsharing.shareWithOptions(
+                                {
+                                    files: [
+                                        'data:image/gif;base64,' + item.value,
+                                    ],
+                                },
+                                null,
+                                (msg) => {
+                                    this.$q.notify(msg);
+                                }
+                            );
+                        }
+                        break;
                     default:
+                        if (this.$q.platform.is.electron) {
+                            fetch(item.value)
+                                .then((response) => response.blob())
+                                .then((blob) => {
+                                    exportFile(
+                                        item.fileName + '.' + item.type,
+                                        blob
+                                    );
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                });
+                        } else if (this.$q.platform.is.cordova) {
+                        }
                         break;
                 }
             },
@@ -316,13 +405,26 @@
                             ((i) => {
                                 if (fetchedItems >= settingsMax) return;
                                 let fullName = data[i].name;
-                                fullName = fullName.split('.');
-                                let nameSplit = fullName[0].split('-');
-                                if (nameSplit.length < 2) return;
+                                let fullNameSplit = fullName.split('.');
                                 let fileType =
-                                    fullName.length < 2 ? 'text' : fullName[1]; //name extension as file type
+                                    fullNameSplit.length < 2
+                                        ? 'text'
+                                        : fullNameSplit[
+                                              fullNameSplit.length - 1
+                                          ]; //name extension as file type
+                                let nameSplit =
+                                    fileType == 'text'
+                                        ? fullName.split('-')
+                                        : fullName
+                                              .replace('.' + fileType, '')
+                                              .split('-');
+                                if (nameSplit.length < 2) return;
                                 let remoteTime = parseInt(nameSplit[0]);
                                 let remoteMD5 = nameSplit[1];
+                                let fileName = null;
+                                if (nameSplit.length > 2) {
+                                    fileName = nameSplit[2];
+                                }
                                 let localItemIndex = this.items.findIndex(
                                     (item) => item.md5 == nameSplit[1]
                                 );
@@ -339,30 +441,54 @@
                                             value: null,
                                             type: null,
                                             source: null,
+                                            fileName: fileName,
+                                            relatedItems: [],
                                         },
                                     });
                                     return;
                                 }
                                 fetchedItems++;
-                                let sha = data[i].sha;
-                                let raw = fileType == 'text' ? true : false;
-                                this.$githubInstance.githubRepo
-                                    .getBlob(sha, raw)
-                                    .then(({ data }) => {
-                                        let dataValue =
-                                            fileType == 'text'
-                                                ? data
-                                                : data.content;
-                                        this.addItem({
-                                            time: remoteTime,
-                                            md5: remoteMD5,
-                                            uploaded: true,
-                                            value: dataValue,
-                                            type: fileType,
-                                            source: 'remote',
-                                            relatedItems: [],
-                                        });
+                                if (
+                                    !['text', 'html', 'png', 'gif'].includes(
+                                        fileType
+                                    )
+                                ) {
+                                    this.addItem({
+                                        time: remoteTime,
+                                        md5: remoteMD5,
+                                        uploaded: true,
+                                        value: data[i].download_url, //only record download url of binary file
+                                        type: fileType,
+                                        source: 'remote',
+                                        fileName: fileName,
+                                        relatedItems: [],
                                     });
+                                } else {
+                                    let sha = data[i].sha;
+                                    let raw =
+                                        fileType == 'text' || fileType == 'html'
+                                            ? true
+                                            : false;
+                                    this.$githubInstance.githubRepo
+                                        .getBlob(sha, raw)
+                                        .then(({ data }) => {
+                                            let dataValue =
+                                                fileType == 'text' ||
+                                                fileType == 'html'
+                                                    ? data
+                                                    : data.content;
+                                            this.addItem({
+                                                time: remoteTime,
+                                                md5: remoteMD5,
+                                                uploaded: true,
+                                                value: dataValue,
+                                                type: fileType,
+                                                source: 'remote',
+                                                fileName: fileName,
+                                                relatedItems: [],
+                                            });
+                                        });
+                                }
                             })(i);
                         }
                         if (toDeleteRemote <= 0) return;
@@ -425,10 +551,11 @@
                             let itemPath = this.getItemPath(toUpload[i]);
                             let content = toUpload[i].value;
                             switch (toUpload[i].type) {
-                                case 'png':
-                                    content = Buffer.from(content, 'base64');
+                                case 'text':
+                                case 'html':
                                     break;
                                 default:
+                                    content = Buffer.from(content, 'base64');
                                     break;
                             }
                             // filePath = path.join(
@@ -452,6 +579,7 @@
                                                 // this.$q.notify(
                                                 //     this.$t('uploaded')
                                                 // );
+                                                console.log('uploaded');
                                                 resolve();
                                             })
                                             .catch((error) => {
@@ -593,7 +721,7 @@
                     }
                 );
             },
-            addItemInternal(data, type, source = 'local') {
+            addItemInternal(data, type, source = 'local', fileName = null) {
                 const md5 = SparkMD5.hash(data);
                 if (
                     data != '' &&
@@ -608,18 +736,22 @@
                         uploaded: false,
                         type: type,
                         source: source,
+                        fileName: fileName,
                         relatedItems: [],
                     });
                 }
             },
             getItemPath(item) {
                 let itemPath = item.time.toString() + '-' + item.md5;
+                if (item.fileName != null) {
+                    itemPath += '-' + item.fileName;
+                }
                 switch (item.type) {
-                    case 'png':
-                        itemPath += '.png';
+                    case 'text':
+                        itemPath += '-text';
                         break;
                     default:
-                        itemPath += '-text';
+                        itemPath += '.' + item.type;
                         break;
                 }
                 return itemPath;

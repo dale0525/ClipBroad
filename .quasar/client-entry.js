@@ -53,6 +53,9 @@ import quasarUserOptions from './quasar-user-options.js'
 
 
 
+console.info('[Quasar] Running ELECTRON.')
+
+
 
 
 
@@ -111,10 +114,7 @@ async function start ({ app, router, store, storeKey }, bootFiles) {
     
 
     
-      document.addEventListener('deviceready', () => {
-        app.config.globalProperties.$q.cordova = window.cordova
-        app.mount('#q-app')
-      }, false) // on deviceready
+      app.mount('#q-app')
     
 
     
