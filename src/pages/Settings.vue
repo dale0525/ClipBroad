@@ -106,13 +106,19 @@
                     :options="[20, 40, 60, 80, 100]"
                     style="width: 250px"
                 >
-                    <q-tooltip
-                        anchor="top middle"
-                        self="bottom middle"
-                        :offset="[10, 10]"
-                    >
-                        {{ $t('maxItemTip') }}
-                    </q-tooltip>
+                </q-select>
+            </div>
+            <div>
+                <q-select
+                    :label="$t('maxFileSize')"
+                    transition-show="jump-up"
+                    transition-hide="jump-up"
+                    filled
+                    v-model="maxFileSize"
+                    :options="[1, 5, 10, 20]"
+                    style="width: 250px"
+                    :hint="$t('maxFileSizeTip2')"
+                >
                 </q-select>
             </div>
         </div>
@@ -220,6 +226,9 @@
                 maxItem: this.$q.localStorage.has('clipbroad-max-item')
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
                     : 40,
+                maxFileSize: this.$q.localStorage.has('clipbroad-max-file-size')
+                    ? this.$q.localStorage.getItem('clipbroad-max-file-size')
+                    : 5,
                 version: process.env.VERSION,
             };
         },
@@ -349,6 +358,9 @@
             },
             maxItem: function (val) {
                 this.$q.localStorage.set('clipbroad-max-item', val);
+            },
+            maxFileSize: function (val) {
+                this.$q.localStorage.set('clipbroad-max-file-size', val);
             },
         },
         created() {

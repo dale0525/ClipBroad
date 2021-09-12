@@ -6,13 +6,16 @@ Sync your clipboard across multiple platforms. [Download the latest release here
 ## Introduction
 This tools uses Github private repo to store and sync your clipboard items. By default, it listens to your local clipboard change like other clipboard tools do. After login to Github, local clipboard items will be uploaded to Github on a frequent basis, while remote items will be fetched to local.
 
-**Currently only text and images are supported**
-
-*This is a very early version solely for personal use. Though CPU/RAM/Battery usages are very low, it may consume network traffic during sync process. Use on your own risk.*
-
 *By login to Github, ClipBroad will ask for your **user** and **repo** permission. These permissions are used to get your avatar, username, Github API rate limit, as well as creating a private repository named **ClipBroadHistory** for you, uploading and deleting clipboard items to this repository.*
 
 **Currently only available on Windows, Mac & Android. Linux and iOS should also work, but you need to [build on your own](https://github.com/dale0525/ClipBroad#build).**
+
+## Features
+- Free to use
+- Record and reuse clipboard history
+- Sync clipboard history to Github if login with Github
+- Sync through Windows, Mac and Android devices
+- Support multiple binary file formats
 
 ## Usage
 - Login at the Settings page
@@ -103,6 +106,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
 - [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
 - [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
+- [broofa/mime](https://github.com/broofa/mime)
 
 ## Donation
 [Paypal](https://paypal.me/logictan)

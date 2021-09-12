@@ -4,13 +4,16 @@
 ## 介绍
 此工具利用Github私人仓库存储并同步剪贴板。默认情况下，它只会和其他剪贴板工具一样记录剪贴板历史。在授权登录Github后，本地历史记录会被上传到Github私人仓库，并将私人仓库的其他历史记录同步到本地。
 
-**当前只支持文字和图片**
-
-*当前版本只是个人使用的早期版本。尽管本工具耗费的设备占用和电量很低，但在同步时会消耗流量。请酌情使用。*
-
 *登录Github账号时，ClipBroad会请求获得**user**和**repo**权限。这两个权限将用来获得用户的头像、用户名和Github API次数限制等信息，以及创建一个名为**ClipBroadHistory**的私人仓库，并向这个仓库提交和删除剪贴板内容。*
 
 **目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要[自行编译](https://github.com/dale0525/ClipBroad#build)。**
+
+## 功能
+- 免费
+- 记录并复用剪贴板历史
+- 使用Github登录后，将剪贴板历史同步到Github
+- 在Windows、Mac和Android设备间同步
+- 支持多种格式的二进制文件
 
 ## 使用方法
 - 在设置界面登录Github
@@ -101,6 +104,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [EddyVerbruggen/SocialSharing-PhoneGap-Plugin](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
 - [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
 - [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
+- [broofa/mime](https://github.com/broofa/mime)
 
 ## 赞助
 支付宝：

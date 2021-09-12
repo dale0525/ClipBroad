@@ -53,7 +53,7 @@ import quasarUserOptions from './quasar-user-options.js'
 
 
 
-console.info('[Quasar] Running ELECTRON.')
+console.info('[Quasar] Running CORDOVA.')
 
 
 
@@ -114,7 +114,10 @@ async function start ({ app, router, store, storeKey }, bootFiles) {
     
 
     
-      app.mount('#q-app')
+      document.addEventListener('deviceready', () => {
+        app.config.globalProperties.$q.cordova = window.cordova
+        app.mount('#q-app')
+      }, false) // on deviceready
     
 
     
@@ -132,7 +135,9 @@ createQuasarApp(createApp, quasarUserOptions)
       
       import(/* webpackMode: "eager" */ 'boot/github'),
       
-      import(/* webpackMode: "eager" */ 'boot/i18n')
+      import(/* webpackMode: "eager" */ 'boot/i18n'),
+      
+      import(/* webpackMode: "eager" */ 'boot/notify-defaults')
       
     ]).then(bootFiles => {
       const boot = bootFiles

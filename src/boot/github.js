@@ -45,6 +45,7 @@ const setGithubUser = () => {
                         resolve(data);
                     })
                     .catch((error) => {
+                        reject(error);
                         console.log(error);
                     });
             } else {
@@ -89,7 +90,10 @@ const setGithubRepo = () => {
                             .then((data) => {
                                 resolve(data);
                             })
-                            .catch((error) => console.log(error));
+                            .catch((error) => {
+                                console.log(error);
+                                reject(error);
+                            });
                     });
             } else {
                 resolve({
@@ -128,6 +132,7 @@ const createGithubRepo = () => {
                 })
                 .catch((error) => {
                     console.log(error);
+                    reject(error);
                 });
         } else {
             reject({

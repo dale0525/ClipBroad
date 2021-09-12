@@ -22,7 +22,6 @@ const {
     remote,
     ipcRenderer,
 } = require('electron');
-const { fstat } = require('original-fs');
 contextBridge.exposeInMainWorld('myAPI', {
     writeClipboardText: (text) => {
         clipboard.writeText(text);
@@ -35,53 +34,74 @@ contextBridge.exposeInMainWorld('myAPI', {
         const image = nativeImage.createFromBuffer(buffer);
         clipboard.writeImage(image);
     },
-    readClipboard: () => {
+    readClipboard: (maxFileSize) => {
         if (process.platform === 'darwin') {
-            if (clipboard.has('NSFilenamesPboardType')) {
-                console.log('multiple files found');
-                return null; // do not handle multiple files
-            } else if (!clipboard.has('public.file-url')) {
+            // if (clipboard.has('NSFilenamesPboardType')) {
+            //     console.log('multiple files found');
+            //     return null; // do not handle multiple files
+            if (!clipboard.has('public.file-url')) {
                 let image = clipboard.readImage();
                 if (image != null && !image.isEmpty()) {
                     return {
                         type: 'png',
                         value: image.toPNG().toString('base64'),
-                        filaName: null,
+                        fileName: null,
                     };
                 }
                 let html = clipboard.readHTML();
                 if (html != null && html != '') {
-                    return { type: 'html', value: html, filaName: null };
+                    let temporalDivElement = document.createElement('div');
+                    temporalDivElement.innerHTML = html;
+                    let aNode = temporalDivElement.querySelector('a');
+                    if (aNode != null) {
+                        return {
+                            type: 'txt',
+                            value: aNode.href,
+                            fileName: null,
+                        };
+                    } else {
+                        html =
+                            html.substr(0, "<meta charset='utf-8'>".length) ==
+                            "<meta charset='utf-8'>"
+                                ? html.replace("<meta charset='utf-8'>", '')
+                                : html;
+                        if (html.substr(0, 1) == '<') {
+                            return {
+                                type: 'html',
+                                value: html,
+                                fileName: null,
+                            };
+                        }
+                    }
                 }
                 let text = clipboard.readText();
                 if (text != null && text != '') {
-                    return { type: 'text', value: text, filaName: null };
+                    return { type: 'txt', value: text, fileName: null };
                 }
                 return null;
             } else {
-                const clipboardImage = clipboard.readImage('clipboard');
-                if (!clipboardImage.isEmpty()) {
-                    return {
-                        type: 'png',
-                        value: clipboardImage.toPNG().toString('base64'),
-                        filaName: null,
-                    };
-                } else {
-                    let filePath = clipboard
-                        .read('public.file-url')
-                        .replace('file://', '');
-                    let filePathSplit = filePath.split('/');
-                    let fileNameFull = filePathSplit[filePathSplit.length - 1];
-                    let fileNameFullSplit = fileNameFull.split('.');
-                    let fileExt =
-                        fileNameFullSplit[fileNameFullSplit.length - 1];
-                    let fileName = fileNameFull.replace(fileExt, '');
-                    return {
-                        type: fileExt,
-                        value: require('fs').readFileSync(filePath, {encoding: 'base64'}),
-                        filaName: fileName,
-                    };
-                }
+                let filePath = clipboard
+                    .read('public.file-url')
+                    .replace('file://', '');
+                filePath = decodeURI(filePath);
+                const fs = require('fs');
+                if (
+                    !fs.existsSync(filePath) ||
+                    fs.statSync(filePath).size / (1024 * 1024) > maxFileSize
+                )
+                    return null;
+                let filePathSplit = filePath.split('/');
+                let fileNameFull = filePathSplit[filePathSplit.length - 1];
+                let fileNameFullSplit = fileNameFull.split('.');
+                let fileExt = fileNameFullSplit[fileNameFullSplit.length - 1];
+                let fileName = fileNameFull.replace('.' + fileExt, '');
+                return {
+                    type: fileExt,
+                    value: require('fs').readFileSync(filePath, {
+                        encoding: 'base64',
+                    }),
+                    fileName: fileName,
+                };
             }
         } else {
             //electron no longer supports CF_HDROP, so multiple files cannot be detected
@@ -96,40 +116,56 @@ contextBridge.exposeInMainWorld('myAPI', {
                 }
                 let html = clipboard.readHTML();
                 if (html != null && html != '') {
-                    return { type: 'html', value: html, fileName: null };
+                    let temporalDivElement = document.createElement('div');
+                    temporalDivElement.innerHTML = html;
+                    let aNode = temporalDivElement.querySelector('a');
+                    if (aNode != null) {
+                        return {
+                            type: 'txt',
+                            value: aNode.href,
+                            fileName: null,
+                        };
+                    } else if (html.substr(0, 1) == '<') {
+                        return {
+                            type: 'html',
+                            value: html,
+                            fileName: null,
+                        };
+                    }
                 }
                 let text = clipboard.readText();
                 if (text != null && text != '') {
-                    return { type: 'text', value: text, fileName: null };
+                    return { type: 'txt', value: text, fileName: null };
                 }
                 return null;
             } else {
-                const clipboardImage = clipboard.readImage('clipboard');
-                if (!clipboardImage.isEmpty()) {
-                    return {
-                        type: 'png',
-                        value: clipboardImage.toPNG().toString('base64'),
-                        fileName: null,
-                    };
-                } else {
-                    let filePath = clipboard
-                        .readBuffer('FileNameW')
-                        .toString('ucs2')
-                        .replace(RegExp(String.fromCharCode(0), 'g'), '');
-                    let filePathSplit = filePath.split('\\');
-                    let fileNameFull = filePathSplit[filePathSplit.length - 1];
-                    let fileNameFullSplit = fileNameFull.split('.');
-                    let fileExt =
-                        fileNameFullSplit[fileNameFullSplit.length - 1];
-                    let fileName = fileNameFull.replace('.' + fileExt, '');
-                    return {
-                        type: fileExt,
-                        value: require('fs').readFileSync(filePath, {encoding: 'base64'}),
-                        fileName: fileName,
-                    };
-                }
+                let filePath = clipboard
+                    .readBuffer('FileNameW')
+                    .toString('ucs2')
+                    .replace(RegExp(String.fromCharCode(0), 'g'), '');
+                const fs = require('fs');
+                if (
+                    !fs.existsSync(filePath) ||
+                    fs.statSync(filePath).size / (1024 * 1024) > maxFileSize
+                )
+                    return null;
+                let filePathSplit = filePath.split('\\');
+                let fileNameFull = filePathSplit[filePathSplit.length - 1];
+                let fileNameFullSplit = fileNameFull.split('.');
+                let fileExt = fileNameFullSplit[fileNameFullSplit.length - 1];
+                let fileName = fileNameFull.replace('.' + fileExt, '');
+                return {
+                    type: fileExt,
+                    value: require('fs').readFileSync(filePath, {
+                        encoding: 'base64',
+                    }),
+                    fileName: fileName,
+                };
             }
         }
+    },
+    clearClipboard: () => {
+        clipboard.clear();
     },
     isDarkMode: () => {
         return remote.nativeTheme.shouldUseDarkColors;

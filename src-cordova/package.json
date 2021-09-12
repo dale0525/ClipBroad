@@ -27,7 +27,7 @@
     "plugins": {
       "cordova-plugin-whitelist": {},
       "cc.fovea.cordova.openwith": {
-        "ANDROID_MIME_TYPE": "image/*",
+        "ANDROID_MIME_TYPE": "*",
         "IOS_URL_SCHEME": "comlogiconsoleclipbroad",
         "IOS_UNIFORM_TYPE_IDENTIFIER": "public.image"
       },

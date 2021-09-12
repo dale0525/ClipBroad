@@ -15,6 +15,7 @@
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "github-api": "^3.4.0",
+    "mime": "^2.5.2",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "quasar": "^2.0.4",
     "spark-md5": "^3.0.1",

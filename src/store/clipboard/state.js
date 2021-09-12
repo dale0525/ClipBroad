@@ -7,5 +7,6 @@ export default function () {
         githubUserName: null,
         githubAvaterUrl: null,
         githubRepoExist: false,
+        actionBtn: false,
     };
 }

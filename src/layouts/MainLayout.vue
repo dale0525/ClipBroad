@@ -24,7 +24,7 @@
             elevated
             v-if="$q.platform.is.cordova || $q.platform.is.mobile"
         >
-            <q-tabs>
+            <q-tabs v-if="!actionBtn">
                 <Footer
                     v-for="footer in footers"
                     :key="footer.label"
@@ -62,6 +62,7 @@
     import Footer from 'src/components/Footer.vue';
 
     import { defineComponent, ref } from 'vue';
+    import { mapState} from 'vuex';
 
     export default defineComponent({
         name: 'MainLayout',
@@ -72,6 +73,7 @@
         },
 
         computed: {
+            ...mapState('clipboard', ['actionBtn']),
             navigations() {
                 return [
                     {

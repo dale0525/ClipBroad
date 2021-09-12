@@ -1,16 +1,4 @@
 export function addItem(state, item) {
-    if (state.items.length < 1){
-        state.items.unshift(item);
-        return;
-    }
-    for (let i = 0; i < state.items.length; i++)
-    {
-        if (state.items[i].md5 == item.md5)
-        {
-            item.relatedItems.push(state.items[i]);
-            state.items.splice(i, 1);
-        }
-    }
     state.items.unshift(item);
     state.items.sort(function (a, b) {
         var x = a.time;
@@ -19,13 +7,18 @@ export function addItem(state, item) {
         if (x > y) return -1;
         return 0;
     });
-    while (state.items.length > 100) {
-        state.items.pop();
+    if (state.items.length > 100) {
+        state.items.splice(99, state.items.length - 100);
     }
 }
 
-export function addRelatedItem(state, payload) {
-    state.items[payload.index].relatedItems.push(payload.item);
+export function updateRemoteParam(state, payload) {
+    if (payload.remotePath != null) {
+        state.items[payload.index].remotePath = payload.remotePath;
+    }
+    if (payload.remoteSha != null) {
+        state.items[payload.index].remoteSha = payload.remoteSha;
+    }
 }
 
 export function removeItem(state, index) {
@@ -34,4 +27,8 @@ export function removeItem(state, index) {
 
 export function setItemUploaded(state, index) {
     state.items[index].uploaded = true;
+}
+
+export function toggleActionBtn(state, toggled) {
+    state.actionBtn = toggled;
 }

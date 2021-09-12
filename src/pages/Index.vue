@@ -15,11 +15,28 @@
                         @dblclick="copyItem(index)"
                         v-touch-hold:500.mouse="
                             () => {
-                                toggleActionBtn = true;
+                                toggleActionBtn(true);
                             }
                         "
-                    >
-                        <q-item-section avatar v-if="toggleActionBtn">
+                        ><q-tooltip v-if="showItemDebugInfo">
+                            {{ item.time }}<br />
+                            {{ item.value.toString().substr(0, 100) }}<br />
+                            {{ item.isBuffer }}<br />
+                            {{ item.md5 }}<br />
+                            {{ item.uploaded }}<br />
+                            {{ item.type }}<br />
+                            {{ item.fileName == null ? 'N/A' : item.fileName
+                            }}<br />
+                            {{
+                                item.remotePath == null
+                                    ? 'N/A'
+                                    : item.remotePath
+                            }}<br />
+                            {{
+                                item.remoteSha == null ? 'N/A' : item.remoteSha
+                            }}
+                        </q-tooltip>
+                        <q-item-section avatar v-if="actionBtn">
                             <q-checkbox
                                 v-model="toDeleteItems"
                                 :val="index"
@@ -30,6 +47,8 @@
                                             toDeleteItems.length == items.length
                                         ) {
                                             isAllSelected = true;
+                                        } else if (toDeleteItems.length == 0) {
+                                            isAllSelected = false;
                                         } else {
                                             isAllSelected = null;
                                         }
@@ -45,7 +64,7 @@
                         </q-item-section>
                         <ClipboardItem
                             :type="item.type"
-                            :value="item.value"
+                            :value="item.value.toString()"
                             :key="item.md5"
                             :fileName="item.fileName"
                         />
@@ -57,12 +76,8 @@
                     </q-item>
                 </transition-group>
             </q-list>
-            <q-toolbar
-                style="z-index: 99999; height: 80px"
-                class="fixed-bottom bg-black"
-                v-if="toggleActionBtn"
-            >
-                <div class="absolute-bottom-left" v-if="toggleActionBtn">
+            <q-toolbar class="fixed-bottom bg-primary" v-if="actionBtn">
+                <div class="absolute-bottom-left" v-if="actionBtn">
                     <q-item-section avatar>
                         <q-checkbox
                             keep-color
@@ -92,7 +107,7 @@
                         @click="
                             () => {
                                 toDeleteItems = [];
-                                toggleActionBtn = false;
+                                toggleActionBtn(false);
                                 isAllSelected = false;
                             }
                         "
@@ -108,6 +123,7 @@
     import ClipboardItem from 'src/components/ClipboardItem.vue';
     import { mapState, mapActions, mapGetters } from 'vuex';
     const SparkMD5 = require('spark-md5');
+    const mime = require('mime');
     import { exportFile } from 'quasar';
     // import { Clipboard } from '@capacitor/clipboard';
     const maxItemLength = 500;
@@ -116,6 +132,8 @@
     var openWithInited = false;
     var toDeleteRemote = 0;
     var uploading = false;
+    var updating = false;
+    var toUploadTree = [];
 
     export default defineComponent({
         components: {
@@ -125,13 +143,13 @@
         data() {
             return {
                 toDeleteItems: [],
-                toggleActionBtn: false,
                 isAllSelected: false,
+                showItemDebugInfo: process.env.PROD ? false : true,
             };
         },
         computed: {
-            ...mapState('clipboard', ['items']),
-            ...mapGetters('clipboard', ['lastLocalItem']),
+            ...mapState('clipboard', ['items', 'actionBtn']),
+            ...mapGetters('clipboard', ['lastNonShareItem']),
             showDeleteBtn() {
                 return this.toDeleteItems.length > 0 ? true : false;
             },
@@ -139,29 +157,46 @@
         methods: {
             ...mapActions('clipboard', [
                 'addItem',
-                'addRelatedItem',
+                'updateRemoteParam',
                 'removeItem',
                 'setItemUploaded',
+                'toggleActionBtn',
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
-                    const item = window.myAPI.readClipboard();
-                    if (item == null) return;
-                    this.addItemInternal(
-                        item.value,
-                        item.type,
-                        'local',
-                        item.fileName
+                    const item = window.myAPI.readClipboard(
+                        this.$q.localStorage.has('clipbroad-max-file-size')
+                            ? this.$q.localStorage.getItem(
+                                  'clipbroad-max-file-size'
+                              )
+                            : 5
                     );
-                } else if (this.$q.platform.is.capacitor) {
-                    Clipboard.read().then((data) => {
-                        if (data.type == 'text/plain') {
-                            this.addItemInternal(data.value, 'text');
-                        }
-                    });
+                    if (item == null) return;
+                    this.addNewItem(
+                        null,
+                        item.value,
+                        true,
+                        null,
+                        false,
+                        item.type,
+                        item.fileName,
+                        null,
+                        null
+                    );
                 } else if (this.$q.platform.is.cordova) {
                     cordova.plugins.clipboard.paste((text) => {
-                        this.addItemInternal(text, 'text');
+                        if (text == null || text == '') return;
+                        this.addNewItem(
+                            null,
+                            text.toString(),
+                            true,
+                            null,
+                            false,
+                            'txt',
+                            null,
+                            null,
+                            null
+                        );
                     });
                 }
             },
@@ -186,8 +221,8 @@
             },
             itemIcon(type) {
                 switch (type) {
-                    case 'text':
-                        return 'text_fields';
+                    case 'txt':
+                        return 'subject';
                     case 'png':
                         return 'image';
                     case 'html':
@@ -205,6 +240,11 @@
                     case 'xls':
                     case 'xlsm':
                         return 'table_view';
+                    case 'doc':
+                    case 'docx':
+                        return 'text_snippet';
+                    case 'txt':
+                        return 'text_fields';
                     default:
                         return 'attachment';
                 }
@@ -212,11 +252,7 @@
             copyItem(index) {
                 const item = this.items[index];
                 switch (item.type) {
-                    case 'text':
-                        this.removeItem(index);
-                        item.time = new Date().getTime();
-                        item.uploaded = false;
-                        this.addItem(item);
+                    case 'txt':
                         if (this.$q.platform.is.electron) {
                             window.myAPI.writeClipboardText(item.value);
                             if (
@@ -235,12 +271,14 @@
                         }
                         break;
                     case 'html':
-                        this.removeItem(index);
-                        item.time = new Date().getTime();
-                        item.uploaded = false;
-                        this.addItem(item);
+                        var temporalDivElement = document.createElement('div');
+                        temporalDivElement.innerHTML = item.value;
+                        var text =
+                            temporalDivElement.textContent ||
+                            temporalDivElement.innerText ||
+                            '';
                         if (this.$q.platform.is.electron) {
-                            window.myAPI.writeClipboardHTML(item.value);
+                            window.myAPI.writeClipboardHTML(text);
                             if (
                                 this.$q.localStorage.getItem(
                                     'clipbroad-show-copied-notification'
@@ -248,18 +286,11 @@
                             )
                                 window.myAPI.showNotification(
                                     this.$t('copied'),
-                                    item.value
+                                    text
                                 );
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
-                            var temporalDivElement =
-                                document.createElement('div');
-                            temporalDivElement.innerHTML = item.value;
-                            cordova.plugins.clipboard.copy(
-                                temporalDivElement.textContent ||
-                                    temporalDivElement.innerText ||
-                                    ''
-                            );
+                            cordova.plugins.clipboard.copy(text);
                             this.$q.notify(this.$t('copied'));
                         }
                         break;
@@ -276,14 +307,14 @@
                                 );
                             window.myAPI.hideWindow();
                         } else if (this.$q.platform.is.cordova) {
-                            // this.$q.notify('Not supported!');
+                            cordova.plugins.clipboard.copy('');
                             window.plugins.socialsharing.shareWithOptions(
                                 {
                                     files: [
                                         'data:image/png;base64,' + item.value,
                                     ],
                                 },
-                                null,
+                                () => {},
                                 (msg) => {
                                     this.$q.notify(msg);
                                 }
@@ -303,15 +334,16 @@
                                 .catch((error) => {
                                     console.log(error);
                                 });
+                            window.myAPI.clearClipboard();
                         } else if (this.$q.platform.is.cordova) {
-                            // this.$q.notify('Not supported!');
+                            cordova.plugins.clipboard.copy('');
                             window.plugins.socialsharing.shareWithOptions(
                                 {
                                     files: [
                                         'data:image/gif;base64,' + item.value,
                                     ],
                                 },
-                                null,
+                                () => {},
                                 (msg) => {
                                     this.$q.notify(msg);
                                 }
@@ -320,21 +352,65 @@
                         break;
                     default:
                         if (this.$q.platform.is.electron) {
-                            fetch(item.value)
-                                .then((response) => response.blob())
-                                .then((blob) => {
-                                    exportFile(
-                                        item.fileName + '.' + item.type,
-                                        blob
-                                    );
-                                })
-                                .catch((error) => {
-                                    console.log(error);
-                                });
+                            if (!item.isBuffer) {
+                                fetch(item.value)
+                                    .then((response) => response.blob())
+                                    .then((blob) => {
+                                        exportFile(
+                                            item.fileName + '.' + item.type,
+                                            blob
+                                        );
+                                    })
+                                    .catch((error) => {
+                                        console.log(error);
+                                    });
+                            } else {
+                                exportFile(
+                                    item.fileName + '.' + item.type,
+                                    Buffer.from(item.value, 'base64')
+                                );
+                            }
+                            window.myAPI.clearClipboard();
                         } else if (this.$q.platform.is.cordova) {
+                            const applicationType = mime.getType(item.type);
+                            if (!applicationType) {
+                                this.$q.notify(this.$t('fileTypeNotSupported'));
+                                return;
+                            } else {
+                                cordova.plugins.clipboard.copy('');
+                                window.plugins.socialsharing.shareWithOptions(
+                                    {
+                                        subject: item.fileName,
+                                        files: [
+                                            item.isBuffer
+                                                ? 'data:' +
+                                                  applicationType +
+                                                  ';base64,' +
+                                                  item.value
+                                                : item.value,
+                                        ],
+                                    },
+                                    () => {},
+                                    (msg) => {
+                                        this.$q.notify(msg);
+                                        return;
+                                    }
+                                );
+                            }
                         }
                         break;
                 }
+                this.addNewItem(
+                    new Date().getTime(),
+                    item.value,
+                    item.isBuffer,
+                    item.md5,
+                    item.uploaded,
+                    item.type,
+                    item.fileName,
+                    item.remotePath,
+                    item.remoteSha
+                );
             },
             setDarkMode() {
                 if (this.$q.platform.is.electron) {
@@ -382,134 +458,106 @@
                 return true;
             },
             updateFromGithub() {
-                if (!this.shouldSync()) return;
-                this.$q.notify(this.$t('updating'));
-                this.$githubInstance.githubRepo
-                    .getContents('main', '', true)
-                    .then(({ data }) => {
-                        toDeleteRemote = Math.max(
-                            data.length - maxItemLength,
-                            0
-                        );
-                        const settingsMax = this.$q.localStorage.has(
-                            'clipbroad-max-item'
-                        )
-                            ? this.$q.localStorage.getItem('clipbroad-max-item')
-                            : 20;
-                        var fetchedItems = 0;
-                        for (
-                            let i = data.length - 1;
-                            i >= Math.max(0, data.length - maxItemLength);
-                            i--
-                        ) {
-                            ((i) => {
-                                if (fetchedItems >= settingsMax) return;
-                                let fullName = data[i].name;
-                                let fullNameSplit = fullName.split('.');
-                                let fileType =
-                                    fullNameSplit.length < 2
-                                        ? 'text'
-                                        : fullNameSplit[
-                                              fullNameSplit.length - 1
-                                          ]; //name extension as file type
-                                let nameSplit =
-                                    fileType == 'text'
-                                        ? fullName.split('-')
-                                        : fullName
-                                              .replace('.' + fileType, '')
-                                              .split('-');
-                                if (nameSplit.length < 2) return;
-                                let remoteTime = parseInt(nameSplit[0]);
-                                let remoteMD5 = nameSplit[1];
-                                let fileName = null;
-                                if (nameSplit.length > 2) {
-                                    fileName = nameSplit[2];
-                                }
-                                let localItemIndex = this.items.findIndex(
-                                    (item) => item.md5 == nameSplit[1]
-                                );
-                                if (
-                                    localItemIndex >= 0 &&
-                                    this.items[localItemIndex].time > remoteTime
-                                ) {
-                                    this.addRelatedItem({
-                                        index: localItemIndex,
-                                        item: {
-                                            time: remoteTime,
-                                            md5: remoteMD5,
-                                            uploaded: true,
-                                            value: null,
-                                            type: null,
-                                            source: null,
-                                            fileName: fileName,
-                                            relatedItems: [],
-                                        },
+                return new Promise((resolve, reject) => {
+                    if (!this.shouldSync()) {
+                        resolve();
+                        return;
+                    }
+                    if (updating) {
+                        reject('Already updating');
+                        return;
+                    }
+                    updating = true;
+                    console.log('updating...');
+                    this.$githubInstance.githubRepo
+                        .getContents('main', '', true)
+                        .then(({ data }) => {
+                            if (data.length < 2) {
+                                updating = false;
+                                resolve();
+                                return;
+                            }
+                            toDeleteRemote = Math.max(
+                                data.length - maxItemLength,
+                                0
+                            );
+                            const settingsMax = this.$q.localStorage.has(
+                                'clipbroad-max-item'
+                            )
+                                ? this.$q.localStorage.getItem(
+                                      'clipbroad-max-item'
+                                  )
+                                : 20;
+                            const toFetch = Math.min(settingsMax, data.length);
+                            let fetched = 0;
+                            for (
+                                let i = data.length - 1;
+                                i >= data.length - toFetch;
+                                i--
+                            ) {
+                                ((i) => {
+                                    let fullName = data[i].name;
+                                    let fullNameSplit = fullName.split('.');
+                                    if (fullNameSplit.length < 2) return;
+                                    let fileType =
+                                        fullNameSplit[fullNameSplit.length - 1];
+                                    let nameSplit = fullName
+                                        .replace('.' + fileType, '')
+                                        .split('-');
+                                    if (nameSplit.length < 2) {
+                                        fetched++;
+                                        return;
+                                    }
+                                    let remoteTime = parseInt(nameSplit[0]);
+                                    let remoteMD5 = nameSplit[1];
+                                    let fileName = null;
+                                    if (nameSplit.length > 2) {
+                                        fileName = fullName
+                                            .replace('.' + fileType, '')
+                                            .replace(
+                                                nameSplit[0] +
+                                                    '-' +
+                                                    nameSplit[1] +
+                                                    '-',
+                                                ''
+                                            );
+                                    }
+                                    this.addNewItem(
+                                        remoteTime,
+                                        data[i].download_url,
+                                        true,
+                                        remoteMD5,
+                                        true,
+                                        fileType,
+                                        fileName,
+                                        data[i].name,
+                                        data[i].sha
+                                    ).then(() => {
+                                        fetched++;
+                                        console.log(`${fetched}/${toFetch}`);
+                                        if (fetched == toFetch) {
+                                            updating = false;
+                                            console.log('updated');
+                                            resolve();
+                                        }
                                     });
-                                    return;
-                                }
-                                fetchedItems++;
-                                if (
-                                    !['text', 'html', 'png', 'gif'].includes(
-                                        fileType
-                                    )
-                                ) {
-                                    this.addItem({
-                                        time: remoteTime,
-                                        md5: remoteMD5,
-                                        uploaded: true,
-                                        value: data[i].download_url, //only record download url of binary file
-                                        type: fileType,
-                                        source: 'remote',
-                                        fileName: fileName,
-                                        relatedItems: [],
-                                    });
-                                } else {
-                                    let sha = data[i].sha;
-                                    let raw =
-                                        fileType == 'text' || fileType == 'html'
-                                            ? true
-                                            : false;
-                                    this.$githubInstance.githubRepo
-                                        .getBlob(sha, raw)
-                                        .then(({ data }) => {
-                                            let dataValue =
-                                                fileType == 'text' ||
-                                                fileType == 'html'
-                                                    ? data
-                                                    : data.content;
-                                            this.addItem({
-                                                time: remoteTime,
-                                                md5: remoteMD5,
-                                                uploaded: true,
-                                                value: dataValue,
-                                                type: fileType,
-                                                source: 'remote',
-                                                fileName: fileName,
-                                                relatedItems: [],
-                                            });
-                                        });
-                                }
-                            })(i);
-                        }
-                        if (toDeleteRemote <= 0) return;
-                        let treeItems = [];
-                        for (let j = 0; j < toDeleteRemote; j++) {
-                            treeItems.push({
-                                path: data[j].path,
-                                sha: null,
-                                mode: '100644',
-                                type: 'blob',
-                            });
-                        }
-                        this.uploadTree(treeItems)
-                            .then(() => {
-                                toDeleteRemote = 0;
-                                console.log('delete complete');
-                            })
-                            .catch((error) => {
-                                console.log(error);
-                            });
-                    });
+                                })(i);
+                            }
+                            if (toDeleteRemote <= 0) return;
+                            for (let j = 0; j < toDeleteRemote; j++) {
+                                toUploadTree.push({
+                                    path: data[j].path,
+                                    sha: null,
+                                    mode: '100644',
+                                    type: 'blob',
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                            reject(error);
+                        });
+                });
             },
             uploadToGithub() {
                 return new Promise((resolve, reject) => {
@@ -518,91 +566,119 @@
                         return;
                     }
                     if (uploading) {
+                        console.log('still uploading...');
                         resolve();
                         return;
                     }
-                    console.log('uploading to github');
                     uploading = true;
-                    let treeItems = [];
                     let toUpload = [];
                     // console.log(this.items);
                     for (let j = 0; j < this.items.length; j++) {
-                        if (
-                            !this.items[j].uploaded &&
-                            this.items[j].value != ''
-                        ) {
+                        if (!this.items[j].uploaded) {
                             toUpload.push(this.items[j]);
                             this.setItemUploaded(j);
                         }
                     }
                     // console.log(toUpload);
+                    // console.log(toUploadTree);
                     if (toUpload.length <= 0) {
-                        console.log('no item to upload');
-                        uploading = false;
-                        resolve();
-                        return;
-                    }
-                    // const tempPath = path.join(remote.app.getPath("temp"), "clipbroad");
-                    // if (!fs.existsSync(tempPath)) {
-                    //     fs.mkdirSync(tempPath);
-                    // }
-                    for (var i = 0; i < toUpload.length; i++) {
-                        ((i) => {
-                            let itemPath = this.getItemPath(toUpload[i]);
-                            let content = toUpload[i].value;
-                            switch (toUpload[i].type) {
-                                case 'text':
-                                case 'html':
-                                    break;
-                                default:
-                                    content = Buffer.from(content, 'base64');
-                                    break;
-                            }
-                            // filePath = path.join(
-                            //     tempPath,
-                            //     fileName,
-                            // );
-                            // fs.writeFileSync(filePath, toUpload[i].value);
-                            // console.log("file saved");
-                            this.$githubInstance.githubRepo
-                                .createBlob(content)
-                                .then(({ data }) => {
-                                    treeItems.push({
-                                        sha: data.sha,
-                                        path: itemPath,
-                                        mode: '100644',
-                                        type: 'blob',
-                                    });
-                                    if (treeItems.length == toUpload.length) {
-                                        this.uploadTree(treeItems)
-                                            .then(() => {
-                                                // this.$q.notify(
-                                                //     this.$t('uploaded')
-                                                // );
-                                                console.log('uploaded');
-                                                resolve();
-                                            })
-                                            .catch((error) => {
-                                                console.log(error);
-                                                this.$q.notify(
-                                                    this.$t('error')
-                                                );
-                                                reject(error);
-                                            });
-                                    }
+                        if (toUploadTree.length <= 0) {
+                            console.log('no item to upload');
+                            uploading = false;
+                            resolve();
+                            return;
+                        } else {
+                            console.log(this.$t('uploading'));
+                            // this.$q.notify(this.$t('uploading'));
+                            this.uploadTree(toUploadTree)
+                                .then(() => {
+                                    console.log(this.$t('uploaded'));
+                                    // this.$q.notify(this.$t('uploaded'));
+                                    toUploadTree = [];
+                                    uploading = false;
+                                    resolve();
                                 })
                                 .catch((error) => {
                                     console.log(error);
                                     this.$q.notify(this.$t('error'));
+                                    // toUploadTree = [];
+                                    uploading = false;
                                     reject(error);
                                 });
-                        })(i);
+                        }
+                    } else {
+                        console.log('uploading');
+                        // this.$q.notify(this.$t('uploading'));
+                        let createBlobCount = 0;
+                        for (var i = 0; i < toUpload.length; i++) {
+                            ((i) => {
+                                let itemPath = this.getItemPath(toUpload[i]);
+                                let content = toUpload[i].value;
+                                switch (toUpload[i].type) {
+                                    case 'txt':
+                                    case 'html':
+                                        break;
+                                    default:
+                                        content = Buffer.from(
+                                            content,
+                                            'base64'
+                                        );
+                                        break;
+                                }
+                                this.$githubInstance.githubRepo
+                                    .createBlob(content)
+                                    .then(({ data }) => {
+                                        toUploadTree.push({
+                                            sha: data.sha,
+                                            path: itemPath,
+                                            mode: '100644',
+                                            type: 'blob',
+                                        });
+                                        createBlobCount++;
+                                        // console.log(
+                                        //     `${createBlobCount} / ${toUpload.length}`
+                                        // );
+                                        if (
+                                            createBlobCount == toUpload.length
+                                        ) {
+                                            this.uploadTree(toUploadTree)
+                                                .then(() => {
+                                                    console.log('uploaded');
+                                                    // this.$q.notify(
+                                                    //     this.$t('uploaded')
+                                                    // );
+                                                    toUploadTree = [];
+                                                    uploading = false;
+                                                    resolve();
+                                                })
+                                                .catch((error) => {
+                                                    console.log(error);
+                                                    this.$q.notify(
+                                                        this.$t('error')
+                                                    );
+                                                    // toUploadTree = [];
+                                                    uploading = false;
+                                                    reject(error);
+                                                });
+                                        }
+                                    })
+                                    .catch((error) => {
+                                        console.log(error);
+                                        this.$q.notify(this.$t('error'));
+                                        uploading = false;
+                                        reject(error);
+                                    });
+                            })(i);
+                        }
                     }
                 });
             },
             uploadTree(treeItems) {
                 return new Promise((resolve, reject) => {
-                    uploading = true;
+                    if (treeItems.length < 1) {
+                        resolve();
+                        return;
+                    }
                     let ghsha;
                     this.getSha()
                         .then((data) => {
@@ -629,11 +705,10 @@
                             );
                         })
                         .then(() => {
-                            uploading = false;
                             resolve();
                         })
                         .catch((error) => {
-                            uploading = false;
+                            console.log(error);
                             reject(error);
                         });
                 });
@@ -672,19 +747,16 @@
                     this.checkClipboard,
                     500
                 );
-                const uploadToGithubInterval = setInterval(
-                    this.uploadToGithub,
-                    30000
-                );
+                const syncInterval = setInterval(this.syncNow, 10000);
                 timers.push(checkClipboardInterval);
-                timers.push(uploadToGithubInterval);
+                timers.push(syncInterval);
             },
             syncNow(done) {
                 if (!this.$githubInstance.githubRepoExist) {
                     this.$router.push('/settings');
                 } else {
-                    this.uploadToGithub().then(() => {
-                        this.updateFromGithub();
+                    this.updateFromGithub().then(() => {
+                        this.uploadToGithub();
                         setTimeout(done, 1000);
                     });
                 }
@@ -696,20 +768,34 @@
                             for (var i = 0; i < intent.items.length; ++i) {
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
-                                    if (item.type.includes('image/')) {
-                                        this.addItemInternal(
+                                    const ext = mime.getExtension(item.type);
+                                    if (ext) {
+                                        var itemPath = item.path;
+                                        itemPath = itemPath.split('/');
+                                        var fullName =
+                                            itemPath[itemPath.length - 1];
+                                        var fullNameSplit = fullName.split('.');
+                                        var fileName = fullName.replace(
+                                            '.' +
+                                                fullNameSplit[
+                                                    fullNameSplit.length - 1
+                                                ],
+                                            ''
+                                        );
+                                        this.addNewItem(
+                                            null,
                                             data,
-                                            'png',
-                                            'share'
+                                            true,
+                                            null,
+                                            false,
+                                            ['jpg', 'png'].includes(ext)
+                                                ? 'png'
+                                                : ext,
+                                            fileName,
+                                            null,
+                                            null,
+                                            true
                                         );
-                                    } else {
-                                        this.$q.notify(
-                                            this.$t('fileTypeNotSupported')
-                                        );
-                                    }
-
-                                    if (intent.exit) {
-                                        cordova.openwith.exit();
                                     }
                                 });
                             }
@@ -721,39 +807,159 @@
                     }
                 );
             },
-            addItemInternal(data, type, source = 'local', fileName = null) {
-                const md5 = SparkMD5.hash(data);
-                if (
-                    data != '' &&
-                    (this.items.length < 1 ||
-                        (this.lastLocalItem != null &&
-                            this.lastLocalItem.md5 != md5))
-                ) {
-                    this.addItem({
-                        time: new Date().getTime(),
-                        value: data,
-                        md5: md5,
-                        uploaded: false,
-                        type: type,
-                        source: source,
-                        fileName: fileName,
-                        relatedItems: [],
-                    });
-                }
+            addNewItem(
+                time,
+                value,
+                isBuffer,
+                md5,
+                uploaded,
+                type,
+                fileName,
+                remotePath,
+                remoteSha,
+                fromShare = false
+            ) {
+                return new Promise((resolve, reject) => {
+                    // console.log(this.items);
+                    if (md5 == null) md5 = SparkMD5.hash(value);
+                    if (
+                        this.lastNonShareItem != null &&
+                        this.lastNonShareItem.md5 == md5
+                    ) {
+                        resolve();
+                        return;
+                    }
+                    if (time == null) time = new Date().getTime();
+                    let localItemIndex = this.items.findIndex(
+                        (item) => item.md5 == md5
+                    );
+                    if (localItemIndex < 0) {
+                        if (remoteSha != null) {
+                            if (!['txt', 'html', 'png', 'gif'].includes(type)) {
+                                this.addItem({
+                                    time: time,
+                                    value: value,
+                                    isBuffer: false,
+                                    md5: md5,
+                                    uploaded: uploaded,
+                                    type: type,
+                                    fileName: fileName,
+                                    remotePath: remotePath,
+                                    remoteSha: remoteSha,
+                                });
+                                resolve();
+                            } else {
+                                let raw =
+                                    type == 'txt' || type == 'html'
+                                        ? true
+                                        : false;
+                                this.$githubInstance.githubRepo
+                                    .getBlob(remoteSha, raw)
+                                    .then(({ data }) => {
+                                        let dataValue =
+                                            type == 'txt' || type == 'html'
+                                                ? data
+                                                : data.content;
+                                        this.addItem({
+                                            time: time,
+                                            value: dataValue,
+                                            isBuffer: true,
+                                            md5: md5,
+                                            uploaded: uploaded,
+                                            type: type,
+                                            fileName: fileName,
+                                            remotePath: remotePath,
+                                            remoteSha: remoteSha,
+                                        });
+                                        resolve();
+                                    });
+                            }
+                        } else {
+                            this.addItem({
+                                time: time,
+                                value: value,
+                                isBuffer: isBuffer,
+                                md5: md5,
+                                uploaded: uploaded,
+                                type: type,
+                                fileName: fileName,
+                                remotePath: remotePath,
+                                remoteSha: remoteSha,
+                            });
+                            resolve();
+                        }
+                    } else if (this.items[localItemIndex].time == time) {
+                        this.updateRemoteParam({
+                            index: localItemIndex,
+                            remotePath: remotePath,
+                            remoteSha: remoteSha,
+                        });
+                        resolve();
+                    } else if (this.items[localItemIndex].time > time) {
+                        toUploadTree.push({
+                            path: remotePath,
+                            sha: null,
+                            mode: '100644',
+                            type: 'blob',
+                        });
+                        resolve();
+                    } else {
+                        let localItem = this.items[localItemIndex];
+                        this.removeItem(localItemIndex);
+                        if (localItem.remotePath != null) {
+                            let newPath = this.getItemPath({
+                                time: time,
+                                md5: md5,
+                                fileName: fileName,
+                                type: type,
+                            });
+                            toUploadTree.push({
+                                path: newPath,
+                                sha: localItem.remoteSha,
+                                mode: '100644',
+                                type: 'blob',
+                            });
+                            toUploadTree.push({
+                                path: localItem.remotePath,
+                                sha: null,
+                                mode: '100644',
+                                type: 'blob',
+                            });
+                            this.addItem({
+                                time: time,
+                                value: value,
+                                isBuffer: isBuffer,
+                                md5: md5,
+                                uploaded: true,
+                                type: type,
+                                fileName: fileName,
+                                remotePath: newPath,
+                                remoteSha: localItem.remoteSha,
+                            });
+                            resolve();
+                        } else {
+                            this.addItem({
+                                time: time,
+                                value: value,
+                                isBuffer: isBuffer,
+                                md5: md5,
+                                uploaded: false,
+                                type: type,
+                                fileName: fileName,
+                                remotePath: null,
+                                remoteSha: null,
+                            });
+                            resolve();
+                        }
+                    }
+                });
             },
             getItemPath(item) {
                 let itemPath = item.time.toString() + '-' + item.md5;
                 if (item.fileName != null) {
                     itemPath += '-' + item.fileName;
                 }
-                switch (item.type) {
-                    case 'text':
-                        itemPath += '-text';
-                        break;
-                    default:
-                        itemPath += '.' + item.type;
-                        break;
-                }
+                itemPath += '.' + item.type;
                 return itemPath;
             },
             deleteSelected(notify = true) {
@@ -765,13 +971,12 @@
                         }, 1000);
                         return;
                     }
-                    let treeItems = [];
                     this.toDeleteItems.sort(function (a, b) {
                         return a - b;
                     });
                     for (let i = 0; i < this.toDeleteItems.length; i++) {
                         if (this.items[this.toDeleteItems[i]].uploaded) {
-                            treeItems.push({
+                            toUploadTree.push({
                                 sha: null,
                                 path: this.getItemPath(
                                     this.items[this.toDeleteItems[i]]
@@ -780,31 +985,10 @@
                                 type: 'blob',
                             });
                         }
-                        if (
-                            this.items[this.toDeleteItems[i]].relatedItems
-                                .length > 0
-                        ) {
-                            for (
-                                let j = 0;
-                                j <
-                                this.items[this.toDeleteItems[i]].relatedItems
-                                    .length;
-                                j++
-                            ) {
-                                treeItems.push({
-                                    sha: null,
-                                    path: this.getItemPath(
-                                        this.items[this.toDeleteItems[i]]
-                                            .relatedItems[j]
-                                    ),
-                                    mode: '100644',
-                                    type: 'blob',
-                                });
-                            }
-                        }
                     }
-                    if (treeItems.length > 0) {
-                        this.uploadTree(treeItems)
+                    if (toUploadTree.length > 0) {
+                        uploading = true;
+                        this.uploadTree(toUploadTree)
                             .then(() => {
                                 for (
                                     let i = this.toDeleteItems.length - 1;
@@ -813,10 +997,14 @@
                                 ) {
                                     this.removeItem(this.toDeleteItems[i]);
                                 }
+                                toUploadTree = [];
+                                uploading = false;
                                 this.$q.notify(this.$t('deleted'));
                             })
                             .catch((error) => {
                                 console.log(error);
+                                toUploadTree = [];
+                                uploading = false;
                                 this.$q.notify(this.$t('error'));
                             });
                     } else {
@@ -830,7 +1018,7 @@
                         this.$q.notify(this.$t('deleted'));
                     }
                 }
-                this.toggleActionBtn = false;
+                this.toggleActionBtn(false);
                 this.isAllSelected = false;
             },
             selectAll() {
@@ -841,18 +1029,33 @@
                     }
                 }
             },
+            initGithub() {
+                if (this.$q.localStorage.has('clipbroad-github-token')) {
+                    this.$q.notify(this.$t('connectingGithub'));
+                    this.$setGithub(
+                        this.$q.localStorage.getItem('clipbroad-github-token')
+                    )
+                        .then(() => {
+                            this.$q.notify(this.$t('connectedGithub'));
+                            this.$q.notify(this.$t('updating'));
+                            this.updateFromGithub()
+                                // .then(this.uploadToGithub())
+                                .then(() => {
+                                    this.$q.notify(this.$t('updated'));
+                                    this.resetTimer();
+                                });
+                        })
+                        .catch(() => {
+                            this.$q.notify();
+                            setTimeout(() => {
+                                this.initGithub();
+                            }, 2000);
+                        });
+                }
+            },
         },
         mounted() {
-            if (this.$q.localStorage.has('clipbroad-github-token')) {
-                this.$setGithub(
-                    this.$q.localStorage.getItem('clipbroad-github-token')
-                )
-                    .then(() => {
-                        this.updateFromGithub();
-                    })
-                    .catch(() => {});
-            }
-            this.resetTimer();
+            this.initGithub();
         },
         created() {
             this.$i18n.locale = this.$q.lang.getLocale();
@@ -870,7 +1073,6 @@
             if (this.$q.platform.is.cordova) {
                 if (!openWithInited) this.setupOpenwith();
             }
-            this.resetTimer();
         },
     });
 </script>
