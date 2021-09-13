@@ -1107,7 +1107,7 @@
                                 });
                         })
                         .catch(() => {
-                            this.$q.notify();
+                            this.$q.notify(this.$t('error'));
                             setTimeout(() => {
                                 this.initGithub();
                             }, 2000);
