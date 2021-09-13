@@ -1,7 +1,7 @@
 export default {
     imageExt: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'tiff', 'bmp', 'ico', 'webp'],
     videoExt: ['mp4', 'mov', 'mkv', 'avi', 'wmv', 'rmvb', 'swf', 'flv', 'mpg', 'mpeg'],
-    audioExt: ['mp3', 'ape', 'flac', 'wav', 'aac', 'wma', 'ogg'],
+    audioExt: ['mp3', 'ape', 'flac', 'wav', 'aac', 'wma', 'ogg', 'mpga'],
     archieveExt: ['zip', '7z', 'rar'],
     excelExt: ['xls', 'xlsx', 'xlsm'],
     wordExt: ['doc', 'docx'],

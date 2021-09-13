@@ -27,7 +27,7 @@
         <audio
             controls
             :src="'data:' + getMimeType(type) + ';base64,' + value"
-            style="object-fit: contain"
+            style="object-fit: contain; max-width: 100%"
     /></q-item-section>
     <q-item-section
         class="rounded-borders text-center bg-green"

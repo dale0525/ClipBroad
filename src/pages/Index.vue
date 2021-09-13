@@ -775,9 +775,10 @@
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
                                     cordova.plugins.clipboard.copy('');
-                                    window
-                                        .resolveLocalFilesystemUrl(item.uri)
-                                        .then((fileEntry) => {
+                                    var itemPath = item.path;
+                                    window.resolveLocalFileSystemURL(
+                                        'file://' + itemPath,
+                                        (fileEntry) => {
                                             fileEntry.getMetadata(
                                                 (metadata) => {
                                                     let fileSize =
@@ -800,8 +801,6 @@
                                                                 item.type
                                                             );
                                                         if (ext) {
-                                                            var itemPath =
-                                                                item.path;
                                                             itemPath =
                                                                 itemPath.split(
                                                                     '/'
@@ -840,7 +839,8 @@
                                                     }
                                                 }
                                             );
-                                        });
+                                        }
+                                    );
                                 });
                             }
                         });
