@@ -1,7 +1,13 @@
 <template>
     <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
         <q-page class="q-pa-md">
-            <q-spinner color="primary" size="3em" :thickness="10" class="fixed-center" v-if="loading"/>
+            <q-spinner
+                color="primary"
+                size="5em"
+                :thickness="10"
+                class="fixed-center"
+                v-if="loading"
+            />
             <q-list bordered separator>
                 <transition-group
                     appear
@@ -1089,7 +1095,7 @@
                     this.$setGithub(
                         this.$q.localStorage.getItem('clipbroad-github-token')
                     )
-                        .then(({data}) => {
+                        .then(({ data }) => {
                             username = data.username;
                             this.$q.notify(this.$t('connectedGithub'));
                             this.$q.notify(this.$t('updating'));
