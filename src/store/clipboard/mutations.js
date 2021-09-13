@@ -13,6 +13,9 @@ export function addItem(state, item) {
 }
 
 export function updateRemoteParam(state, payload) {
+    if (!state.items[payload.index].isBuffer) {
+        state.items[payload.index].value = payload.value;
+    }
     if (payload.remotePath != null) {
         state.items[payload.index].remotePath = payload.remotePath;
     }

@@ -1,6 +1,7 @@
 <template>
     <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
         <q-page class="q-pa-md">
+            <q-spinner color="primary" size="3em" :thickness="10" class="fixed-center" v-if="loading"/>
             <q-list bordered separator>
                 <transition-group
                     appear
@@ -125,6 +126,7 @@
     const SparkMD5 = require('spark-md5');
     const mime = require('mime');
     import { exportFile } from 'quasar';
+    import config from 'src/config.js';
     // import { Clipboard } from '@capacitor/clipboard';
     const maxItemLength = 500;
     var timers = [];
@@ -134,6 +136,8 @@
     var uploading = false;
     var updating = false;
     var toUploadTree = [];
+    var deletedMd5 = [];
+    var username;
 
     export default defineComponent({
         components: {
@@ -145,6 +149,13 @@
                 toDeleteItems: [],
                 isAllSelected: false,
                 showItemDebugInfo: process.env.PROD ? false : true,
+                maxFileSize: this.$q.localStorage.has('clipbroad-max-file-size')
+                    ? this.$q.localStorage.getItem('clipbroad-max-file-size')
+                    : config.defaultSettings.maxFileSize,
+                maxItem: this.$q.localStorage.has('clipbroad-max-item')
+                    ? this.$q.localStorage.getItem('clipbroad-max-item')
+                    : config.defaultSettings.maxItem,
+                loading: false,
             };
         },
         computed: {
@@ -164,13 +175,7 @@
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
-                    const item = window.myAPI.readClipboard(
-                        this.$q.localStorage.has('clipbroad-max-file-size')
-                            ? this.$q.localStorage.getItem(
-                                  'clipbroad-max-file-size'
-                              )
-                            : 5
-                    );
+                    const item = window.myAPI.readClipboard(this.maxFileSize);
                     if (item == null) return;
                     this.addNewItem(
                         null,
@@ -192,7 +197,7 @@
                             true,
                             null,
                             false,
-                            'txt',
+                            'text',
                             null,
                             null,
                             null
@@ -220,112 +225,135 @@
                 }
             },
             itemIcon(type) {
-                switch (type) {
-                    case 'txt':
-                        return 'subject';
-                    case 'png':
-                        return 'image';
-                    case 'html':
-                        return 'code';
-                    case 'pdf':
-                        return 'picture_as_pdf';
-                    case 'gif':
-                        return 'gif_box';
-                    case 'zip':
-                    case '7z':
-                    case 'rar':
-                    case 'tar':
-                        return 'archive';
-                    case 'xlsx':
-                    case 'xls':
-                    case 'xlsm':
-                        return 'table_view';
-                    case 'doc':
-                    case 'docx':
-                        return 'text_snippet';
-                    case 'txt':
-                        return 'text_fields';
-                    default:
-                        return 'attachment';
+                if (type == 'html') {
+                    return 'code';
+                } else if (type == 'pdf') {
+                    return 'picture_as_pdf';
+                } else if (type == 'apk') {
+                    return 'apps';
+                } else if (type == 'text') {
+                    return 'subject';
+                } else if (config.textExt.includes(type)) {
+                    return 'text_fields';
+                } else if (config.imageExt.includes(type)) {
+                    return 'image';
+                } else if (config.archieveExt.includes(type)) {
+                    return 'archive';
+                } else if (config.excelExt.includes(type)) {
+                    return 'table_view';
+                } else if (config.wordExt.includes(type)) {
+                    return 'article';
+                } else if (config.videoExt.includes(type)) {
+                    return 'movie';
+                } else if (config.audioExt.includes(type)) {
+                    return 'audiotrack';
+                } else {
+                    return 'attachment';
                 }
             },
             copyItem(index) {
                 const item = this.items[index];
-                switch (item.type) {
-                    case 'txt':
-                        if (this.$q.platform.is.electron) {
-                            window.myAPI.writeClipboardText(item.value);
-                            if (
-                                this.$q.localStorage.getItem(
-                                    'clipbroad-show-copied-notification'
-                                ) === true
-                            )
-                                window.myAPI.showNotification(
-                                    this.$t('copied'),
-                                    item.value
-                                );
-                            window.myAPI.hideWindow();
-                        } else if (this.$q.platform.is.cordova) {
-                            cordova.plugins.clipboard.copy(item.value);
-                            this.$q.notify(this.$t('copied'));
-                        }
-                        break;
-                    case 'html':
-                        var temporalDivElement = document.createElement('div');
-                        temporalDivElement.innerHTML = item.value;
-                        var text =
-                            temporalDivElement.textContent ||
-                            temporalDivElement.innerText ||
-                            '';
-                        if (this.$q.platform.is.electron) {
-                            window.myAPI.writeClipboardHTML(text);
-                            if (
-                                this.$q.localStorage.getItem(
-                                    'clipbroad-show-copied-notification'
-                                ) === true
-                            )
-                                window.myAPI.showNotification(
-                                    this.$t('copied'),
-                                    text
-                                );
-                            window.myAPI.hideWindow();
-                        } else if (this.$q.platform.is.cordova) {
-                            cordova.plugins.clipboard.copy(text);
-                            this.$q.notify(this.$t('copied'));
-                        }
-                        break;
-                    case 'png':
-                        if (this.$q.platform.is.electron) {
-                            window.myAPI.writeClipboardImage(item.value);
-                            if (
-                                this.$q.localStorage.getItem(
-                                    'clipbroad-show-copied-notification'
-                                ) === true
-                            )
-                                window.myAPI.showNotification(
-                                    this.$t('copied')
-                                );
-                            window.myAPI.hideWindow();
-                        } else if (this.$q.platform.is.cordova) {
-                            cordova.plugins.clipboard.copy('');
-                            window.plugins.socialsharing.shareWithOptions(
-                                {
-                                    files: [
-                                        'data:image/png;base64,' + item.value,
-                                    ],
-                                },
-                                () => {},
-                                (msg) => {
-                                    this.$q.notify(msg);
-                                }
+                if (item.type == 'text') {
+                    if (this.$q.platform.is.electron) {
+                        window.myAPI.writeClipboardText(item.value);
+                        if (
+                            this.$q.localStorage.getItem(
+                                'clipbroad-show-copied-notification'
+                            ) === true
+                        )
+                            window.myAPI.showNotification(
+                                this.$t('copied'),
+                                item.value
                             );
-                        }
-                        break;
-                    case 'gif':
-                        if (this.$q.platform.is.electron) {
-                            fetch('data:image/gif;base64,' + item.value)
+                        window.myAPI.hideWindow();
+                    } else if (this.$q.platform.is.cordova) {
+                        cordova.plugins.clipboard.copy(item.value);
+                        this.$q.notify(this.$t('copied'));
+                    }
+                } else if (item.type == 'html') {
+                    var temporalDivElement = document.createElement('div');
+                    temporalDivElement.innerHTML = item.value;
+                    var text =
+                        temporalDivElement.textContent ||
+                        temporalDivElement.innerText ||
+                        '';
+                    if (this.$q.platform.is.electron) {
+                        window.myAPI.writeClipboardHTML(text);
+                        if (
+                            this.$q.localStorage.getItem(
+                                'clipbroad-show-copied-notification'
+                            ) === true
+                        )
+                            window.myAPI.showNotification(
+                                this.$t('copied'),
+                                text
+                            );
+                        window.myAPI.hideWindow();
+                    } else if (this.$q.platform.is.cordova) {
+                        cordova.plugins.clipboard.copy(text);
+                        this.$q.notify(this.$t('copied'));
+                    }
+                } else if (item.type == 'gif') {
+                    if (this.$q.platform.is.electron) {
+                        fetch('data:image/gif;base64,' + item.value)
+                            .then((response) => response.blob())
+                            .then((blob) => {
+                                exportFile(
+                                    item.fileName + '.' + item.type,
+                                    blob
+                                );
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                            });
+                        window.myAPI.clearClipboard();
+                    } else if (this.$q.platform.is.cordova) {
+                        cordova.plugins.clipboard.copy('');
+                        window.plugins.socialsharing.shareWithOptions(
+                            {
+                                files: ['data:image/gif;base64,' + item.value],
+                            },
+                            () => {},
+                            (msg) => {
+                                this.$q.notify(msg);
+                            }
+                        );
+                    }
+                } else if (config.imageExt.includes(item.type)) {
+                    if (this.$q.platform.is.electron) {
+                        window.myAPI.writeClipboardImage(item.value);
+                        if (
+                            this.$q.localStorage.getItem(
+                                'clipbroad-show-copied-notification'
+                            ) === true
+                        )
+                            window.myAPI.showNotification(this.$t('copied'));
+                        window.myAPI.hideWindow();
+                    } else if (this.$q.platform.is.cordova) {
+                        cordova.plugins.clipboard.copy('');
+                        window.plugins.socialsharing.shareWithOptions(
+                            {
+                                files: [
+                                    'data:' +
+                                        mime.getType(item.type) +
+                                        ';base64,' +
+                                        item.value,
+                                ],
+                            },
+                            () => {},
+                            (msg) => {
+                                this.$q.notify(msg);
+                            }
+                        );
+                    }
+                } else {
+                    if (this.$q.platform.is.electron) {
+                        if (!item.isBuffer) {
+                            this.loading = true;
+                            fetch(item.value)
                                 .then((response) => response.blob())
                                 .then((blob) => {
+                                    this.loading = false;
                                     exportFile(
                                         item.fileName + '.' + item.type,
                                         blob
@@ -334,71 +362,40 @@
                                 .catch((error) => {
                                     console.log(error);
                                 });
-                            window.myAPI.clearClipboard();
-                        } else if (this.$q.platform.is.cordova) {
+                        } else {
+                            exportFile(
+                                item.fileName + '.' + item.type,
+                                Buffer.from(item.value, 'base64')
+                            );
+                        }
+                        window.myAPI.clearClipboard();
+                    } else if (this.$q.platform.is.cordova) {
+                        const applicationType = mime.getType(item.type);
+                        if (!applicationType) {
+                            this.$q.notify(this.$t('fileTypeNotSupported'));
+                            return;
+                        } else {
                             cordova.plugins.clipboard.copy('');
                             window.plugins.socialsharing.shareWithOptions(
                                 {
+                                    subject: item.fileName,
                                     files: [
-                                        'data:image/gif;base64,' + item.value,
+                                        item.isBuffer
+                                            ? 'data:' +
+                                              applicationType +
+                                              ';base64,' +
+                                              item.value
+                                            : item.value,
                                     ],
                                 },
                                 () => {},
                                 (msg) => {
                                     this.$q.notify(msg);
+                                    return;
                                 }
                             );
                         }
-                        break;
-                    default:
-                        if (this.$q.platform.is.electron) {
-                            if (!item.isBuffer) {
-                                fetch(item.value)
-                                    .then((response) => response.blob())
-                                    .then((blob) => {
-                                        exportFile(
-                                            item.fileName + '.' + item.type,
-                                            blob
-                                        );
-                                    })
-                                    .catch((error) => {
-                                        console.log(error);
-                                    });
-                            } else {
-                                exportFile(
-                                    item.fileName + '.' + item.type,
-                                    Buffer.from(item.value, 'base64')
-                                );
-                            }
-                            window.myAPI.clearClipboard();
-                        } else if (this.$q.platform.is.cordova) {
-                            const applicationType = mime.getType(item.type);
-                            if (!applicationType) {
-                                this.$q.notify(this.$t('fileTypeNotSupported'));
-                                return;
-                            } else {
-                                cordova.plugins.clipboard.copy('');
-                                window.plugins.socialsharing.shareWithOptions(
-                                    {
-                                        subject: item.fileName,
-                                        files: [
-                                            item.isBuffer
-                                                ? 'data:' +
-                                                  applicationType +
-                                                  ';base64,' +
-                                                  item.value
-                                                : item.value,
-                                        ],
-                                    },
-                                    () => {},
-                                    (msg) => {
-                                        this.$q.notify(msg);
-                                        return;
-                                    }
-                                );
-                            }
-                        }
-                        break;
+                    }
                 }
                 this.addNewItem(
                     new Date().getTime(),
@@ -481,14 +478,7 @@
                                 data.length - maxItemLength,
                                 0
                             );
-                            const settingsMax = this.$q.localStorage.has(
-                                'clipbroad-max-item'
-                            )
-                                ? this.$q.localStorage.getItem(
-                                      'clipbroad-max-item'
-                                  )
-                                : 20;
-                            const toFetch = Math.min(settingsMax, data.length);
+                            const toFetch = Math.min(this.maxItem, data.length);
                             let fetched = 0;
                             for (
                                 let i = data.length - 1;
@@ -510,6 +500,11 @@
                                     }
                                     let remoteTime = parseInt(nameSplit[0]);
                                     let remoteMD5 = nameSplit[1];
+                                    if (deletedMd5.includes(remoteMD5)) {
+                                        //to avoid hitting github cache after delete items
+                                        fetched++;
+                                        return;
+                                    }
                                     let fileName = null;
                                     if (nameSplit.length > 2) {
                                         fileName = fullName
@@ -534,7 +529,6 @@
                                         data[i].sha
                                     ).then(() => {
                                         fetched++;
-                                        console.log(`${fetched}/${toFetch}`);
                                         if (fetched == toFetch) {
                                             updating = false;
                                             console.log('updated');
@@ -589,12 +583,15 @@
                             return;
                         } else {
                             console.log(this.$t('uploading'));
+                            let tmpUploadTree = toUploadTree;
                             // this.$q.notify(this.$t('uploading'));
                             this.uploadTree(toUploadTree)
                                 .then(() => {
                                     console.log(this.$t('uploaded'));
                                     // this.$q.notify(this.$t('uploaded'));
-                                    toUploadTree = [];
+                                    toUploadTree = toUploadTree.filter(
+                                        (el) => !tmpUploadTree.includes(el)
+                                    );
                                     uploading = false;
                                     resolve();
                                 })
@@ -615,7 +612,7 @@
                                 let itemPath = this.getItemPath(toUpload[i]);
                                 let content = toUpload[i].value;
                                 switch (toUpload[i].type) {
-                                    case 'txt':
+                                    case 'text':
                                     case 'html':
                                         break;
                                     default:
@@ -745,9 +742,12 @@
                 timers = [];
                 const checkClipboardInterval = setInterval(
                     this.checkClipboard,
-                    500
+                    config.checkClipboardInterval
                 );
-                const syncInterval = setInterval(this.syncNow, 10000);
+                const syncInterval = setInterval(
+                    this.syncNow,
+                    config.autoSyncInterval
+                );
                 timers.push(checkClipboardInterval);
                 timers.push(syncInterval);
             },
@@ -768,35 +768,73 @@
                             for (var i = 0; i < intent.items.length; ++i) {
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
-                                    const ext = mime.getExtension(item.type);
-                                    if (ext) {
-                                        var itemPath = item.path;
-                                        itemPath = itemPath.split('/');
-                                        var fullName =
-                                            itemPath[itemPath.length - 1];
-                                        var fullNameSplit = fullName.split('.');
-                                        var fileName = fullName.replace(
-                                            '.' +
-                                                fullNameSplit[
-                                                    fullNameSplit.length - 1
-                                                ],
-                                            ''
-                                        );
-                                        this.addNewItem(
-                                            null,
-                                            data,
-                                            true,
-                                            null,
-                                            false,
-                                            ['jpg', 'png'].includes(ext)
-                                                ? 'png'
-                                                : ext,
-                                            fileName,
-                                            null,
-                                            null,
-                                            true
-                                        );
-                                    }
+                                    cordova.plugins.clipboard.copy('');
+                                    window
+                                        .resolveLocalFilesystemUrl(item.uri)
+                                        .then((fileEntry) => {
+                                            fileEntry.getMetadata(
+                                                (metadata) => {
+                                                    let fileSize =
+                                                        metadata.size /
+                                                        1024 /
+                                                        1024;
+                                                    if (
+                                                        fileSize >
+                                                        this.maxFileSize
+                                                    ) {
+                                                        this.$q.notify(
+                                                            this.$t(
+                                                                'maxFileSizeTip2'
+                                                            )
+                                                        );
+                                                        return;
+                                                    } else {
+                                                        const ext =
+                                                            mime.getExtension(
+                                                                item.type
+                                                            );
+                                                        if (ext) {
+                                                            var itemPath =
+                                                                item.path;
+                                                            itemPath =
+                                                                itemPath.split(
+                                                                    '/'
+                                                                );
+                                                            var fullName =
+                                                                itemPath[
+                                                                    itemPath.length -
+                                                                        1
+                                                                ];
+                                                            var fullNameSplit =
+                                                                fullName.split(
+                                                                    '.'
+                                                                );
+                                                            var fileName =
+                                                                fullName.replace(
+                                                                    '.' +
+                                                                        fullNameSplit[
+                                                                            fullNameSplit.length -
+                                                                                1
+                                                                        ],
+                                                                    ''
+                                                                );
+                                                            this.addNewItem(
+                                                                null,
+                                                                data,
+                                                                true,
+                                                                null,
+                                                                false,
+                                                                ext,
+                                                                fileName,
+                                                                null,
+                                                                null,
+                                                                true
+                                                            );
+                                                        }
+                                                    }
+                                                }
+                                            );
+                                        });
                                 });
                             }
                         });
@@ -835,7 +873,14 @@
                     );
                     if (localItemIndex < 0) {
                         if (remoteSha != null) {
-                            if (!['txt', 'html', 'png', 'gif'].includes(type)) {
+                            if (
+                                !['text', 'html']
+                                    .concat(config.imageExt)
+                                    .concat(config.videoExt)
+                                    .concat(config.audioExt)
+                                    .concat(config.textExt)
+                                    .includes(type)
+                            ) {
                                 this.addItem({
                                     time: time,
                                     value: value,
@@ -850,14 +895,14 @@
                                 resolve();
                             } else {
                                 let raw =
-                                    type == 'txt' || type == 'html'
+                                    type == 'html' || type == 'text'
                                         ? true
                                         : false;
                                 this.$githubInstance.githubRepo
                                     .getBlob(remoteSha, raw)
                                     .then(({ data }) => {
                                         let dataValue =
-                                            type == 'txt' || type == 'html'
+                                            type == 'html' || type == 'text'
                                                 ? data
                                                 : data.content;
                                         this.addItem({
@@ -891,6 +936,7 @@
                     } else if (this.items[localItemIndex].time == time) {
                         this.updateRemoteParam({
                             index: localItemIndex,
+                            value: value,
                             remotePath: remotePath,
                             remoteSha: remoteSha,
                         });
@@ -995,10 +1041,14 @@
                                     i >= 0;
                                     i--
                                 ) {
+                                    deletedMd5.push(
+                                        this.items[this.toDeleteItems[i]].md5
+                                    );
                                     this.removeItem(this.toDeleteItems[i]);
                                 }
                                 toUploadTree = [];
                                 uploading = false;
+                                this.toDeleteItems = [];
                                 this.$q.notify(this.$t('deleted'));
                             })
                             .catch((error) => {
@@ -1013,8 +1063,12 @@
                             i >= 0;
                             i--
                         ) {
+                            deletedMd5.push(
+                                this.items[this.toDeleteItems[i]].md5
+                            );
                             this.removeItem(this.toDeleteItems[i]);
                         }
+                        this.toDeleteItems = [];
                         this.$q.notify(this.$t('deleted'));
                     }
                 }
@@ -1035,7 +1089,8 @@
                     this.$setGithub(
                         this.$q.localStorage.getItem('clipbroad-github-token')
                     )
-                        .then(() => {
+                        .then(({data}) => {
+                            username = data.username;
                             this.$q.notify(this.$t('connectedGithub'));
                             this.$q.notify(this.$t('updating'));
                             this.updateFromGithub()
@@ -1066,7 +1121,7 @@
             }
             let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
                 ? this.$q.localStorage.getItem('clipbroad-hide-icon')
-                : true;
+                : config.defaultSettings.hideIcon;
             if (this.$q.platform.is.electron) {
                 window.myAPI.setHideIcon(hideIcon);
             }

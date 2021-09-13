@@ -15,17 +15,17 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - Record and reuse clipboard history
 - Sync clipboard history to Github if login with Github
 - Sync through Windows, Mac and Android devices
-- Support multiple binary file formats
+- Support common binary file formats
 
 ## Usage
 - Login at the Settings page
 - Drag to upload & update on the main page
-- Double click to copy item on desktop
-- Double tap to copy text or share image on mobile
-- Items are automatically uploaded every 30 seconds (will be configurable in the future)
+- On desktop, double click text and image to copy them, or double click other files to save to local
+- On mobile, double tap text to copy, or double tap other files to share
+- Items are automatically uploaded every 30 seconds
 - Click tray icon on desktop to show/hide main panel
 - Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (will be configurable in the future)
-- Images on mobile are not in clipboard, but can be shared to this app (ClipBroad)
+- Files of common type can be shared to this app (ClipBroad) on mobile
 
 ## Screenshots
 Android:
@@ -86,7 +86,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Localization (US, zhCN)
 - [x] Delete local item
 - [x] Delete related Github item
-- [ ] Support other common binary files
+- [x] Support other common binary files
 - [ ] Settings for dark mode
 - [ ] Settings for desktop shortcut
 - [ ] Search function

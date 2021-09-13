@@ -194,7 +194,7 @@
 <script>
     import { openURL, uid } from 'quasar';
     import { ref } from 'vue';
-    const GITHUB_CLIENT_ID = 'fa79756f53d8c0a88ddd';
+    import config from 'src/config.js';
     let checkLogginInterval = null;
     let loggin = false;
     let hasToken = ref(false);
@@ -207,28 +207,28 @@
             return {
                 hideIcon: this.$q.localStorage.has('clipbroad-hide-icon')
                     ? this.$q.localStorage.getItem('clipbroad-hide-icon')
-                    : false,
+                    : config.defaultSettings.hideIcon,
                 autoLaunch: this.$q.localStorage.has('clipbroad-auto-launch')
                     ? this.$q.localStorage.getItem('clipbroad-auto-launch')
-                    : false,
+                    : config.defaultSettings.autoLaunch,
                 showCopiedNotification: this.$q.localStorage.has(
                     'clipbroad-show-copied-notification'
                 )
                     ? this.$q.localStorage.getItem(
                           'clipbroad-show-copied-notification'
                       )
-                    : true,
+                    : config.defaultSettings.showCopiedNotification,
                 syncUseMobileData: this.$q.localStorage.has(
                     'clipbroad-use-mobile-data'
                 )
                     ? this.$q.localStorage.getItem('clipbroad-use-mobile-data')
-                    : false,
+                    : config.defaultSettings.syncUseMobileData,
                 maxItem: this.$q.localStorage.has('clipbroad-max-item')
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
-                    : 40,
+                    : config.defaultSettings.maxItem,
                 maxFileSize: this.$q.localStorage.has('clipbroad-max-file-size')
                     ? this.$q.localStorage.getItem('clipbroad-max-file-size')
-                    : 5,
+                    : config.defaultSettings.maxFileSize,
                 version: process.env.VERSION,
             };
         },
@@ -254,7 +254,7 @@
                 let uuid = uid();
                 this.$q.localStorage.set('clipbroad-github-state', uuid);
                 openURL(
-                    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`
+                    `https://github.com/login/oauth/authorize?client_id=${config.githubClientID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`
                 );
                 loggin = true;
             },

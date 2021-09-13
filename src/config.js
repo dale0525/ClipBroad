@@ -1,0 +1,20 @@
+export default {
+    imageExt: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'tiff', 'bmp', 'ico', 'webp'],
+    videoExt: ['mp4', 'mov', 'mkv', 'avi', 'wmv', 'rmvb', 'swf', 'flv', 'mpg', 'mpeg'],
+    audioExt: ['mp3', 'ape', 'flac', 'wav', 'aac', 'wma', 'ogg'],
+    archieveExt: ['zip', '7z', 'rar'],
+    excelExt: ['xls', 'xlsx', 'xlsm'],
+    wordExt: ['doc', 'docx'],
+    textExt: ['txt', 'inf', 'rtf'],
+    defaultSettings:{
+        hideIcon: false,
+        autoLaunch: false,
+        showCopiedNotification: true,
+        syncUseMobileData: false,
+        maxItem: 40,
+        maxFileSize: 5,
+    },
+    githubClientID: 'fa79756f53d8c0a88ddd',
+    autoSyncInterval: 30000,
+    checkClipboardInterval: 500,
+};

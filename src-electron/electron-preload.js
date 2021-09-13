@@ -55,7 +55,7 @@ contextBridge.exposeInMainWorld('myAPI', {
                     let aNode = temporalDivElement.querySelector('a');
                     if (aNode != null) {
                         return {
-                            type: 'txt',
+                            type: 'text',
                             value: aNode.href,
                             fileName: null,
                         };
@@ -76,7 +76,7 @@ contextBridge.exposeInMainWorld('myAPI', {
                 }
                 let text = clipboard.readText();
                 if (text != null && text != '') {
-                    return { type: 'txt', value: text, fileName: null };
+                    return { type: 'text', value: text, fileName: null };
                 }
                 return null;
             } else {
@@ -121,7 +121,7 @@ contextBridge.exposeInMainWorld('myAPI', {
                     let aNode = temporalDivElement.querySelector('a');
                     if (aNode != null) {
                         return {
-                            type: 'txt',
+                            type: 'text',
                             value: aNode.href,
                             fileName: null,
                         };
@@ -135,7 +135,7 @@ contextBridge.exposeInMainWorld('myAPI', {
                 }
                 let text = clipboard.readText();
                 if (text != null && text != '') {
-                    return { type: 'txt', value: text, fileName: null };
+                    return { type: 'text', value: text, fileName: null };
                 }
                 return null;
             } else {
