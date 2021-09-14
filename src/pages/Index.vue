@@ -143,7 +143,6 @@
     var updating = false;
     var toUploadTree = [];
     var deletedMd5 = [];
-    var username;
 
     export default defineComponent({
         components: {
@@ -416,10 +415,11 @@
                 );
             },
             setDarkMode() {
-                if (this.$q.platform.is.electron) {
-                    const darkMode = window.myAPI.isDarkMode();
-                    this.$q.dark.set(darkMode);
-                }
+                const darkMode = this.$q.localStorage.has('clipbroad-dark-mode')
+                    ? this.$q.localStorage.getItem('clipbroad-dark-mode')
+                    : config.defaultSettings.darkMode;
+                this.$q.dark.set(darkMode);
+                this.$q.dark.toggle();
             },
             isCellular() {
                 if (this.$q.platform.is.electron) return false;
@@ -535,6 +535,7 @@
                                         data[i].sha
                                     ).then(() => {
                                         fetched++;
+                                        // console.log(`${fetched} / ${toFetch}`);
                                         if (fetched == toFetch) {
                                             updating = false;
                                             console.log('updated');
@@ -761,10 +762,14 @@
                 if (!this.$githubInstance.githubRepoExist) {
                     this.$router.push('/settings');
                 } else {
-                    this.updateFromGithub().then(() => {
-                        this.uploadToGithub();
-                        setTimeout(done, 1000);
-                    });
+                    this.updateFromGithub()
+                        .then(() => {
+                            this.uploadToGithub();
+                            setTimeout(done, 1000);
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
                 }
             },
             setupOpenwith() {
@@ -1096,7 +1101,6 @@
                         this.$q.localStorage.getItem('clipbroad-github-token')
                     )
                         .then(({ data }) => {
-                            username = data.username;
                             this.$q.notify(this.$t('connectedGithub'));
                             this.$q.notify(this.$t('updating'));
                             this.updateFromGithub()
@@ -1123,6 +1127,7 @@
             this.setDarkMode();
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow, false);
+                window.addEventListener('setDarkMode', this.setDarkMode, false);
                 existEventListen = true;
             }
             let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')

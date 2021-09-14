@@ -49,9 +49,8 @@
             <q-separator />
         </div>
         <div class="col-6 q-pa-md items-center">
-            <div>
+            <div v-if="$q.platform.is.mac">
                 <q-toggle
-                    v-if="$q.platform.is.mac"
                     v-model="hideIcon"
                     checked-icon="check"
                     color="green"
@@ -60,9 +59,8 @@
                     left-label
                 />
             </div>
-            <div>
+            <div v-if="$q.platform.is.electron">
                 <q-toggle
-                    v-if="$q.platform.is.electron"
                     v-model="autoLaunch"
                     checked-icon="check"
                     color="green"
@@ -72,9 +70,8 @@
                     class="q-mb-md"
                 />
             </div>
-            <div>
+            <div v-if="$q.platform.is.electron">
                 <q-toggle
-                    v-if="$q.platform.is.electron"
                     v-model="showCopiedNotification"
                     checked-icon="check"
                     color="green"
@@ -84,9 +81,8 @@
                     class="q-mb-md"
                 />
             </div>
-            <div>
+            <div v-if="$q.platform.is.cordova">
                 <q-toggle
-                    v-if="$q.platform.is.cordova"
                     v-model="syncUseMobileData"
                     checked-icon="check"
                     color="green"
@@ -98,6 +94,22 @@
             </div>
             <div>
                 <q-select
+                    :label="$t('darkMode')"
+                    transition-show="jump-up"
+                    transition-hide="jump-up"
+                    filled
+                    v-model="darkMode"
+                    :options="[
+                        { label: $t('yes'), value: false },
+                        { label: $t('no'), value: true },
+                        { label: $t('darkModeAuto'), value: 'auto' },
+                    ]"
+                    style="width: 250px"
+                >
+                </q-select>
+            </div>
+            <div class="q-mt-md">
+                <q-select
                     :label="$t('maxItem')"
                     transition-show="jump-up"
                     transition-hide="jump-up"
@@ -108,7 +120,7 @@
                 >
                 </q-select>
             </div>
-            <div>
+            <div class="q-mt-md">
                 <q-select
                     :label="$t('maxFileSize')"
                     transition-show="jump-up"
@@ -120,6 +132,36 @@
                     :hint="$t('maxFileSizeTip2')"
                 >
                 </q-select>
+            </div>
+            <div v-if="$q.platform.is.electron" class="q-mt-xl">
+                <q-field
+                    filled
+                    :label="$t('shortcut')"
+                    :model-value="shortcut"
+                    stack-label
+                    :rules="[
+                        (val) => {
+                            if (val && validShortcut) {
+                                return true;
+                            } else if (!validShortcut) {
+                                return $t('invalidShortcut');
+                            } else if (registerShortcutSuccess) {
+                                return true;
+                            } else {
+                                return $t('shortcutRegisterFail');
+                            }
+                        },
+                    ]"
+                >
+                    <div
+                        class="self-center full-width no-outline"
+                        tabindex="0"
+                        v-on:keydown="setShortcut"
+                        @click="setShortcutStart = true"
+                    >
+                        {{ shortcut }}
+                    </div>
+                </q-field>
             </div>
         </div>
         <div class="col-1 q-py-md" style="width: 100%">
@@ -226,9 +268,18 @@
                 maxItem: this.$q.localStorage.has('clipbroad-max-item')
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
                     : config.defaultSettings.maxItem,
+                darkMode: this.$q.localStorage.has('clipbroad-dark-mode')
+                    ? this.$q.localStorage.getItem('clipbroad-dark-mode')
+                    : config.defaultSettings.darkMode,
                 maxFileSize: this.$q.localStorage.has('clipbroad-max-file-size')
                     ? this.$q.localStorage.getItem('clipbroad-max-file-size')
                     : config.defaultSettings.maxFileSize,
+                shortcutArray: this.$q.localStorage.has('clipbroad-shortcut')
+                    ? this.$q.localStorage.getItem('clipbroad-shortcut')
+                    : config.defaultSettings.shortcut,
+                setShortcutStart: false,
+                validShortcut: true,
+                registerShortcutSuccess: true,
                 version: process.env.VERSION,
             };
         },
@@ -244,6 +295,9 @@
             },
             rateLimit() {
                 return rateLimit.value;
+            },
+            shortcut() {
+                return this.shortcutArray.join('+');
             },
             // appVisible() {
             //     return this.$q.appVisible;
@@ -287,6 +341,67 @@
                     toolbar: true,
                     noreferrer: true,
                 });
+            },
+            setShortcut(event) {
+                if (this.$q.platform.is.win && event.metaKey) return;
+                var key = event.key;
+                key = key.charAt(0).toUpperCase() + key.slice(1);
+                if (this.setShortcutStart) {
+                    this.validShortcut = true;
+                    this.setShortcutStart = false;
+                    this.shortcutArray = [];
+                }
+                if (
+                    this.shortcutArray.length > 0 &&
+                    this.shortcutArray.includes(key)
+                ) {
+                    return;
+                }
+                this.shortcutArray.push(key);
+                if (
+                    ![
+                        'Meta',
+                        'Shift',
+                        'Control',
+                        'Alt',
+                        'Option',
+                        'AltGr',
+                        'Super',
+                    ].includes(key)
+                ) {
+                    //not modify key, stop capturing keyboard
+                    if (this.shortcutArray.length < 2) {
+                        this.validShortcut = false;
+                        this.setShortcutStart = true;
+                        this.shortcutArray = [];
+                        return;
+                    }
+                    window.myAPI
+                        .registerShortcut(JSON.stringify(this.shortcutArray))
+                        .then((result) => {
+                            if (result) {
+                                //register success
+                                this.registerShortcutSuccess = true;
+                                this.validShortcut = true;
+                                this.$q.localStorage.set(
+                                    'clipbroad-shortcut',
+                                    this.shortcutArray
+                                );
+                                document.activeElement.blur();
+                                this.$q.notify(
+                                    this.$t('shortcutRegisterSuccess')
+                                );
+                            } else {
+                                this.registerShortcutSuccess = false;
+                                this.validShortcut = true;
+                                this.setShortcutStart = true;
+                                this.shortcutArray = [];
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }
             },
         },
         mounted() {
@@ -358,6 +473,10 @@
             },
             maxItem: function (val) {
                 this.$q.localStorage.set('clipbroad-max-item', val);
+            },
+            darkMode: function (val) {
+                this.$q.localStorage.set('clipbroad-dark-mode', val.value);
+                window.dispatchEvent(new CustomEvent('setDarkMode'));
             },
             maxFileSize: function (val) {
                 this.$q.localStorage.set('clipbroad-max-file-size', val);

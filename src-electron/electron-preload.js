@@ -19,7 +19,6 @@ const {
     clipboard,
     contextBridge,
     nativeImage,
-    remote,
     ipcRenderer,
 } = require('electron');
 contextBridge.exposeInMainWorld('myAPI', {
@@ -167,9 +166,6 @@ contextBridge.exposeInMainWorld('myAPI', {
     clearClipboard: () => {
         clipboard.clear();
     },
-    isDarkMode: () => {
-        return remote.nativeTheme.shouldUseDarkColors;
-    },
     hideWindow: () => {
         ipcRenderer.send('hideWindow');
     },
@@ -181,6 +177,9 @@ contextBridge.exposeInMainWorld('myAPI', {
     },
     registerAutoLaunch: (enable) => {
         ipcRenderer.send('registerAutoLaunch', enable);
+    },
+    registerShortcut: async (shortcut) => {
+        return await ipcRenderer.invoke('registerShortcut', shortcut);
     },
 });
 

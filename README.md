@@ -87,8 +87,8 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Delete local item
 - [x] Delete related Github item
 - [x] Support other common binary files
-- [ ] Settings for dark mode
-- [ ] Settings for desktop shortcut
+- [x] Settings for dark mode
+- [x] Settings for desktop shortcut
 - [ ] Search function
 - [ ] Redirect to app after Github login on mobile
 - [ ] Auto update for Windows & Mac

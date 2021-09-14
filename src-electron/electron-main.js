@@ -105,10 +105,6 @@ app.on('ready', () => {
     if (process.platform === 'win32') {
         app.setAppUserModelId(app.name);
     }
-
-    globalShortcut.register('CommandOrControl+Shift+V', () => {
-        mainWindow.show();
-    });
 });
 
 app.on('window-all-closed', () => {
@@ -123,9 +119,9 @@ app.on('activate', () => {
     }
 });
 
-// app.on('browser-window-blur', () => {
-//     mainWindow.hide();
-// });
+app.on('browser-window-blur', () => {
+    mainWindow.hide();
+});
 
 ipcMain.on('hideWindow', () => {
     mainWindow.hide();
@@ -157,5 +153,24 @@ ipcMain.on('registerAutoLaunch', (e, enable) => {
                 .disable()
                 .then(console.log('Auto Launch Disabled!'))
                 .catch((error) => console.log(error));
+    });
+});
+
+ipcMain.handle('registerShortcut', async (e, shortcut) => {
+    shortcut = JSON.parse(shortcut);
+    var shortcutString = '';
+    shortcut.forEach(key => {
+        if (key == 'Meta')
+        {
+            shortcutString += '+' + 'Command';
+        }
+        else
+        {
+            shortcutString += '+' + key;
+        }
+    });
+    shortcutString = shortcutString.substr(1, shortcutString.length - 1);
+    return globalShortcut.register(shortcutString, () => {
+        mainWindow.show();
     });
 });
