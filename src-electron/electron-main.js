@@ -9,6 +9,7 @@ import {
 } from 'electron';
 import path from 'path';
 const AutoLaunch = require('auto-launch');
+const { Deeplink } = require('electron-deeplink');
 
 try {
     if (
@@ -27,6 +28,9 @@ try {
 let mainWindow;
 let tray = null;
 let contextMenu = null;
+const isDev = !process.env.PROD;
+const protocol = 'clipbroad';
+const deeplink = new Deeplink({ app, mainWindow, protocol, isDev });
 
 function createWindow() {
     /**
@@ -187,4 +191,8 @@ ipcMain.handle('registerShortcut', async (e, shortcut) => {
 
 ipcMain.on('showWindow', (e, show) => {
     show ? mainWindow.show() : mainWindow.hide();
+});
+
+deeplink.on('received', (link) => {
+    mainWindow.show();
 });
