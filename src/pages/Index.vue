@@ -1236,7 +1236,9 @@
         },
         mounted() {
             this.initGithub();
-            this.$refs.searchInput.focus();
+            this.$nextTick(() => {
+                this.$refs.searchInput.focus();
+            });
         },
         created() {
             this.$i18n.locale = this.$q.lang.getLocale();
