@@ -1,5 +1,8 @@
 <template>
     <q-page class="column q-pa-md items-center">
+        <q-item to="/" clickable class="fixed-top-left q-ma-lg">
+            <q-icon name="arrow_back" size="lg" class="absolute-center" />
+        </q-item>
         <div class="col-3 q-py-md">
             <transition
                 appear
@@ -49,7 +52,7 @@
             <q-separator />
         </div>
         <div class="col-6 q-pa-md items-center">
-            <div v-if="$q.platform.is.mac">
+            <div v-if="$q.platform.is.electron">
                 <q-toggle
                     v-model="hideIcon"
                     checked-icon="check"
@@ -67,7 +70,6 @@
                     unchecked-icon="clear"
                     :label="$t('launchWithSystem')"
                     left-label
-                    class="q-mb-md"
                 />
             </div>
             <div v-if="$q.platform.is.electron">
@@ -78,7 +80,6 @@
                     unchecked-icon="clear"
                     :label="$t('copyNotification')"
                     left-label
-                    class="q-mb-md"
                 />
             </div>
             <div v-if="$q.platform.is.cordova">
@@ -89,10 +90,9 @@
                     unchecked-icon="clear"
                     :label="$t('useCellular')"
                     left-label
-                    class="q-mb-md"
                 />
             </div>
-            <div>
+            <div class="q-mt-md">
                 <q-select
                     :label="$t('darkMode')"
                     transition-show="jump-up"
@@ -104,6 +104,7 @@
                         { label: $t('no'), value: true },
                         { label: $t('darkModeAuto'), value: 'auto' },
                     ]"
+                    :map-options="true"
                     style="width: 250px"
                 >
                 </q-select>
@@ -433,6 +434,8 @@
                                     data.message
                                 );
                                 this.setToken(data.message);
+                                if (this.$q.platform.is.electron)
+                                    window.myAPI.showWindow(true);
                             }
                         })
                         .catch((error) => {

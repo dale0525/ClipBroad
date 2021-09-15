@@ -1,12 +1,14 @@
 <template>
     <q-item-section v-if="type == 'text'">
-        <q-item-label lines="3">{{ value }}</q-item-label>
+        <q-item-label class="ellipsis-3-lines">{{ value }}</q-item-label>
     </q-item-section>
     <q-item-section v-if="textExt.includes(type)">
-        <q-item-label lines="3">{{ base64ToString(value) }}</q-item-label>
+        <q-item-label class="ellipsis-3-lines">{{
+            base64ToString(value)
+        }}</q-item-label>
     </q-item-section>
     <q-item-section v-if="type == 'html'">
-        <q-item-label lines="3" v-html="value"></q-item-label>
+        <q-item-label class="ellipsis-3-lines" v-html="value"></q-item-label>
     </q-item-section>
     <q-item-section v-if="imageExt.includes(type)"
         ><img
@@ -30,7 +32,7 @@
             style="object-fit: contain; max-width: 100%"
     /></q-item-section>
     <q-item-section
-        class="rounded-borders text-center bg-green"
+        class="rounded-borders text-center bg-green ellipsis"
         v-if="
             !['text', 'html']
                 .concat(imageExt)
@@ -39,7 +41,7 @@
                 .concat(textExt)
                 .includes(type)
         "
-        >{{ fileName + '.' + type }}</q-item-section
+        >{{ fileName + (type == null ? '' : '.' + type) }}</q-item-section
     >
 </template>
 
@@ -53,7 +55,7 @@
         props: {
             type: {
                 type: String,
-                required: true,
+                required: false,
             },
 
             value: {

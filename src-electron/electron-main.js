@@ -36,7 +36,7 @@ function createWindow() {
         width: 1000,
         height: 600,
         useContentSize: true,
-        frame: process.env.PROD ? false : true,
+        frame: false,
         webPreferences: {
             contextIsolation: true,
             // More info: /quasar-cli/developing-electron-apps/electron-preload-script
@@ -128,11 +128,24 @@ ipcMain.on('hideWindow', () => {
 });
 
 ipcMain.on('hideIcon', (e, hide) => {
-    if (process.platform !== 'darwin') return;
     if (hide) {
-        app.dock.hide();
+        if (process.platform === 'darwin')
+        {
+            app.dock.hide();
+        }
+        else
+        {
+            mainWindow.setSkipTaskbar(true);
+        }
     } else {
-        app.dock.show();
+        if (process.platform === 'darwin')
+        {
+            app.dock.show();
+        }
+        else
+        {
+            mainWindow.setSkipTaskbar(false);
+        }
     }
 });
 
@@ -159,13 +172,10 @@ ipcMain.on('registerAutoLaunch', (e, enable) => {
 ipcMain.handle('registerShortcut', async (e, shortcut) => {
     shortcut = JSON.parse(shortcut);
     var shortcutString = '';
-    shortcut.forEach(key => {
-        if (key == 'Meta')
-        {
+    shortcut.forEach((key) => {
+        if (key == 'Meta') {
             shortcutString += '+' + 'Command';
-        }
-        else
-        {
+        } else {
             shortcutString += '+' + key;
         }
     });
@@ -173,4 +183,8 @@ ipcMain.handle('registerShortcut', async (e, shortcut) => {
     return globalShortcut.register(shortcutString, () => {
         mainWindow.show();
     });
+});
+
+ipcMain.on('showWindow', (e, show) => {
+    show ? mainWindow.show() : mainWindow.hide();
 });

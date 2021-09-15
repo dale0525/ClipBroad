@@ -1,46 +1,72 @@
 <template>
-    <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
-        <q-page class="q-pa-md">
-            <q-spinner
-                color="primary"
-                size="5em"
-                :thickness="10"
-                class="fixed-center"
-                v-if="loading"
-            />
-            <q-list bordered separator>
+    <q-page class="q-pa-md">
+        <q-card style="position: sticky; top: 0" class="z-top q-mb-md">
+            <q-input standout v-model="search" maxlength="50" debounce="300">
+                <template v-slot:prepend>
+                    <q-icon name="search" />
+                </template>
+                <template v-slot:append>
+                    <q-icon
+                        v-if="search !== ''"
+                        name="close"
+                        @click="search = ''"
+                    />
+                </template>
+
+                <template v-slot:after>
+                    <q-item to="/settings" clickable>
+                        <q-icon name="settings" class="absolute-center" />
+                    </q-item>
+                </template>
+            </q-input>
+        </q-card>
+        <q-spinner
+            color="primary"
+            size="5em"
+            :thickness="10"
+            class="fixed-center"
+            v-if="loading"
+        />
+        <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
+            <q-list bordered separator v-if="filterItemIndex.length > 0">
                 <transition-group
                     appear
                     enter-active-class="animated slideInLeft"
                     leave-active-class="animated fadeOutLeft"
                 >
                     <q-item
-                        v-for="(item, index) in items"
+                        v-for="index in filterItemIndex"
                         :key="index"
                         clickable
                         v-ripple
                         @dblclick="copyItem(index)"
                         v-touch-hold:500.mouse="
                             () => {
-                                toggleActionBtn(true);
+                                actionBtn = true;
                             }
                         "
                         ><q-tooltip v-if="showItemDebugInfo">
-                            {{ item.time }}<br />
-                            {{ item.value.toString().substr(0, 100) }}<br />
-                            {{ item.isBuffer }}<br />
-                            {{ item.md5 }}<br />
-                            {{ item.uploaded }}<br />
-                            {{ item.type }}<br />
-                            {{ item.fileName == null ? 'N/A' : item.fileName
+                            {{ items[index].time }}<br />
+                            {{ items[index].value.toString().substr(0, 100)
                             }}<br />
+                            {{ items[index].isBuffer }}<br />
+                            {{ items[index].md5 }}<br />
+                            {{ items[index].uploaded }}<br />
+                            {{ items[index].type }}<br />
                             {{
-                                item.remotePath == null
+                                items[index].fileName == null
                                     ? 'N/A'
-                                    : item.remotePath
+                                    : items[index].fileName
                             }}<br />
                             {{
-                                item.remoteSha == null ? 'N/A' : item.remoteSha
+                                items[index].remotePath == null
+                                    ? 'N/A'
+                                    : items[index].remotePath
+                            }}<br />
+                            {{
+                                items[index].remoteSha == null
+                                    ? 'N/A'
+                                    : items[index].remoteSha
                             }}
                         </q-tooltip>
                         <q-item-section avatar v-if="actionBtn">
@@ -66,18 +92,18 @@
                         <q-item-section avatar>
                             <q-icon
                                 color="primary"
-                                :name="itemIcon(item.type)"
+                                :name="itemIcon(items[index].type)"
                             />
                         </q-item-section>
                         <ClipboardItem
-                            :type="item.type"
-                            :value="item.value.toString()"
-                            :key="item.md5"
-                            :fileName="item.fileName"
+                            :type="items[index].type"
+                            :value="items[index].value.toString()"
+                            :key="items[index].md5"
+                            :fileName="items[index].fileName"
                         />
                         <q-item-section side>
                             <q-item-label caption>{{
-                                prevTime(item.time)
+                                prevTime(items[index].time)
                             }}</q-item-label>
                         </q-item-section>
                     </q-item>
@@ -114,15 +140,15 @@
                         @click="
                             () => {
                                 toDeleteItems = [];
-                                toggleActionBtn(false);
+                                actionBtn = false;
                                 isAllSelected = false;
                             }
                         "
                     />
                 </div>
             </q-toolbar>
-        </q-page>
-    </q-pull-to-refresh>
+        </q-pull-to-refresh>
+    </q-page>
 </template>
 
 <script>
@@ -143,6 +169,8 @@
     var updating = false;
     var toUploadTree = [];
     var deletedMd5 = [];
+    var updateTimeout = null;
+    var uploadTimeout = null;
 
     export default defineComponent({
         components: {
@@ -161,13 +189,24 @@
                     ? this.$q.localStorage.getItem('clipbroad-max-item')
                     : config.defaultSettings.maxItem,
                 loading: false,
+                search: '',
+                actionBtn: false,
             };
         },
         computed: {
-            ...mapState('clipboard', ['items', 'actionBtn']),
+            ...mapState('clipboard', ['items']),
             ...mapGetters('clipboard', ['lastNonShareItem']),
             showDeleteBtn() {
                 return this.toDeleteItems.length > 0 ? true : false;
+            },
+            filterItemIndex() {
+                return this.items.length < 1
+                    ? []
+                    : [...this.items.keys()].filter((i) => {
+                          return this.getSearchContent(i)
+                              .toLowerCase()
+                              .includes(this.search.toLowerCase());
+                      });
             },
         },
         methods: {
@@ -176,7 +215,6 @@
                 'updateRemoteParam',
                 'removeItem',
                 'setItemUploaded',
-                'toggleActionBtn',
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
@@ -276,14 +314,9 @@
                         this.$q.notify(this.$t('copied'));
                     }
                 } else if (item.type == 'html') {
-                    var temporalDivElement = document.createElement('div');
-                    temporalDivElement.innerHTML = item.value;
-                    var text =
-                        temporalDivElement.textContent ||
-                        temporalDivElement.innerText ||
-                        '';
+                    var text = this.getTextFromHtml(item.value);
                     if (this.$q.platform.is.electron) {
-                        window.myAPI.writeClipboardHTML(text);
+                        window.myAPI.writeClipboardHTML(item.value, text);
                         if (
                             this.$q.localStorage.getItem(
                                 'clipbroad-show-copied-notification'
@@ -360,7 +393,9 @@
                                 .then((blob) => {
                                     this.loading = false;
                                     exportFile(
-                                        item.fileName + '.' + item.type,
+                                        item.type == null
+                                            ? item.fileName
+                                            : item.fileName + '.' + item.type,
                                         blob
                                     );
                                 })
@@ -369,12 +404,18 @@
                                 });
                         } else {
                             exportFile(
-                                item.fileName + '.' + item.type,
+                                item.type == null
+                                    ? item.fileName
+                                    : item.fileName + '.' + item.type,
                                 Buffer.from(item.value, 'base64')
                             );
                         }
                         window.myAPI.clearClipboard();
                     } else if (this.$q.platform.is.cordova) {
+                        if (item.type == null) {
+                            this.$q.notify(this.$t('fileTypeNotSupported'));
+                            return;
+                        }
                         const applicationType = mime.getType(item.type);
                         if (!applicationType) {
                             this.$q.notify(this.$t('fileTypeNotSupported'));
@@ -463,6 +504,7 @@
             updateFromGithub() {
                 return new Promise((resolve, reject) => {
                     if (!this.shouldSync()) {
+                        console.log('will not sync due to network settings');
                         resolve();
                         return;
                     }
@@ -472,11 +514,15 @@
                     }
                     updating = true;
                     console.log('updating...');
+                    updateTimeout = setTimeout(() => {
+                        updating = false;
+                    }, 120000);
                     this.$githubInstance.githubRepo
                         .getContents('main', '', true)
                         .then(({ data }) => {
                             if (data.length < 2) {
                                 updating = false;
+                                clearTimeout(updateTimeout);
                                 resolve();
                                 return;
                             }
@@ -494,12 +540,18 @@
                                 ((i) => {
                                     let fullName = data[i].name;
                                     let fullNameSplit = fullName.split('.');
-                                    if (fullNameSplit.length < 2) return;
-                                    let fileType =
-                                        fullNameSplit[fullNameSplit.length - 1];
-                                    let nameSplit = fullName
-                                        .replace('.' + fileType, '')
-                                        .split('-');
+                                    let fileType = null;
+                                    if (fullNameSplit.length > 1)
+                                        fileType =
+                                            fullNameSplit[
+                                                fullNameSplit.length - 1
+                                            ];
+                                    let nameSplit =
+                                        fileType == null
+                                            ? fullName.split('-')
+                                            : fullName
+                                                  .replace('.' + fileType, '')
+                                                  .split('-');
                                     if (nameSplit.length < 2) {
                                         fetched++;
                                         return;
@@ -538,6 +590,7 @@
                                         // console.log(`${fetched} / ${toFetch}`);
                                         if (fetched == toFetch) {
                                             updating = false;
+                                            clearTimeout(updateTimeout);
                                             console.log('updated');
                                             resolve();
                                         }
@@ -572,6 +625,9 @@
                         return;
                     }
                     uploading = true;
+                    uploadTimeout = setTimeout(() => {
+                        uploading = false;
+                    }, 120000);
                     let toUpload = [];
                     // console.log(this.items);
                     for (let j = 0; j < this.items.length; j++) {
@@ -586,6 +642,7 @@
                         if (toUploadTree.length <= 0) {
                             console.log('no item to upload');
                             uploading = false;
+                            clearTimeout(uploadTimeout);
                             resolve();
                             return;
                         } else {
@@ -600,6 +657,7 @@
                                         (el) => !tmpUploadTree.includes(el)
                                     );
                                     uploading = false;
+                                    clearTimeout(uploadTimeout);
                                     resolve();
                                 })
                                 .catch((error) => {
@@ -607,6 +665,7 @@
                                     this.$q.notify(this.$t('error'));
                                     // toUploadTree = [];
                                     uploading = false;
+                                    clearTimeout(uploadTimeout);
                                     reject(error);
                                 });
                         }
@@ -653,6 +712,7 @@
                                                     // );
                                                     toUploadTree = [];
                                                     uploading = false;
+                                                    clearTimeout(uploadTimeout);
                                                     resolve();
                                                 })
                                                 .catch((error) => {
@@ -662,6 +722,7 @@
                                                     );
                                                     // toUploadTree = [];
                                                     uploading = false;
+                                                    clearTimeout(uploadTimeout);
                                                     reject(error);
                                                 });
                                         }
@@ -670,6 +731,7 @@
                                         console.log(error);
                                         this.$q.notify(this.$t('error'));
                                         uploading = false;
+                                        clearTimeout(uploadTimeout);
                                         reject(error);
                                     });
                             })(i);
@@ -797,6 +859,15 @@
                                                         this.$q.notify(
                                                             this.$t(
                                                                 'maxFileSizeTip2'
+                                                            )
+                                                        );
+                                                        return;
+                                                    } else if (
+                                                        item.type == null
+                                                    ) {
+                                                        this.$q.notify(
+                                                            this.$t(
+                                                                'fileTypeNotSupported'
                                                             )
                                                         );
                                                         return;
@@ -1016,7 +1087,9 @@
                 if (item.fileName != null) {
                     itemPath += '-' + item.fileName;
                 }
-                itemPath += '.' + item.type;
+                if (item.type != null) {
+                    itemPath += '.' + item.type;
+                }
                 return itemPath;
             },
             deleteSelected(notify = true) {
@@ -1083,7 +1156,7 @@
                         this.$q.notify(this.$t('deleted'));
                     }
                 }
-                this.toggleActionBtn(false);
+                this.actionBtn = false;
                 this.isAllSelected = false;
             },
             selectAll() {
@@ -1118,6 +1191,42 @@
                         });
                 }
             },
+            getTextFromHtml(html) {
+                var temporalDivElement = document.createElement('div');
+                temporalDivElement.innerHTML = html;
+                var text =
+                    temporalDivElement.textContent ||
+                    temporalDivElement.innerText ||
+                    '';
+                temporalDivElement.remove();
+                return text;
+            },
+            getSearchContent(index) {
+                var content = '';
+                if (index in this.items) {
+                    if (this.items[index].type != null) {
+                        content += '.' + this.items[index].type;
+                    }
+                    if (this.items[index].fileName != null) {
+                        content += this.items[index].fileName;
+                    }
+                    if (this.items[index].type == 'text') {
+                        content += this.items[index].value;
+                    }
+                    if (this.items[index].type == 'html') {
+                        content += this.getTextFromHtml(
+                            this.items[index].value
+                        );
+                    }
+                    if (config.textExt.includes(this.items[index].type)) {
+                        content += Buffer.from(
+                            this.items[index].value,
+                            'base64'
+                        ).toString('utf-8');
+                    }
+                }
+                return content;
+            },
         },
         mounted() {
             this.initGithub();
@@ -1125,6 +1234,10 @@
         created() {
             this.$i18n.locale = this.$q.lang.getLocale();
             this.setDarkMode();
+            let shortcutArray = this.$q.localStorage.has('clipbroad-shortcut')
+                ? this.$q.localStorage.getItem('clipbroad-shortcut')
+                : config.defaultSettings.shortcut;
+            window.myAPI.registerShortcut(JSON.stringify(shortcutArray));
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow, false);
                 window.addEventListener('setDarkMode', this.setDarkMode, false);
@@ -1133,9 +1246,7 @@
             let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
                 ? this.$q.localStorage.getItem('clipbroad-hide-icon')
                 : config.defaultSettings.hideIcon;
-            if (this.$q.platform.is.electron) {
-                window.myAPI.setHideIcon(hideIcon);
-            }
+            window.myAPI.setHideIcon(hideIcon);
             if (this.$q.platform.is.cordova) {
                 if (!openWithInited) this.setupOpenwith();
             }

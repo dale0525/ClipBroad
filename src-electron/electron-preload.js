@@ -25,8 +25,8 @@ contextBridge.exposeInMainWorld('myAPI', {
     writeClipboardText: (text) => {
         clipboard.writeText(text);
     },
-    writeClipboardHTML: (html) => {
-        clipboard.writeHTML(html);
+    writeClipboardHTML: (html, text) => {
+        clipboard.write({ text: text, html: html });
     },
     writeClipboardImage: (imageString) => {
         const buffer = Buffer.from(imageString, 'base64');
@@ -86,14 +86,21 @@ contextBridge.exposeInMainWorld('myAPI', {
                 const fs = require('fs');
                 if (
                     !fs.existsSync(filePath) ||
+                    fs.lstatSync(filePath).isDirectory() ||
                     fs.statSync(filePath).size / (1024 * 1024) > maxFileSize
                 )
                     return null;
                 let filePathSplit = filePath.split('/');
                 let fileNameFull = filePathSplit[filePathSplit.length - 1];
                 let fileNameFullSplit = fileNameFull.split('.');
-                let fileExt = fileNameFullSplit[fileNameFullSplit.length - 1];
-                let fileName = fileNameFull.replace('.' + fileExt, '');
+                let fileExt =
+                    fileNameFullSplit.length < 2
+                        ? null
+                        : fileNameFullSplit[fileNameFullSplit.length - 1];
+                let fileName =
+                    fileExt == null
+                        ? fileNameFull
+                        : fileNameFull.replace('.' + fileExt, '');
                 return {
                     type: fileExt,
                     value: require('fs').readFileSync(filePath, {
@@ -145,14 +152,21 @@ contextBridge.exposeInMainWorld('myAPI', {
                 const fs = require('fs');
                 if (
                     !fs.existsSync(filePath) ||
+                    fs.lstatSync(filePath).isDirectory() ||
                     fs.statSync(filePath).size / (1024 * 1024) > maxFileSize
                 )
                     return null;
                 let filePathSplit = filePath.split('\\');
                 let fileNameFull = filePathSplit[filePathSplit.length - 1];
                 let fileNameFullSplit = fileNameFull.split('.');
-                let fileExt = fileNameFullSplit[fileNameFullSplit.length - 1];
-                let fileName = fileNameFull.replace('.' + fileExt, '');
+                let fileExt =
+                    fileNameFullSplit.length < 2
+                        ? null
+                        : fileNameFullSplit[fileNameFullSplit.length - 1];
+                let fileName =
+                    fileExt == null
+                        ? fileNameFull
+                        : fileNameFull.replace('.' + fileExt, '');
                 return {
                     type: fileExt,
                     value: require('fs').readFileSync(filePath, {
@@ -180,6 +194,9 @@ contextBridge.exposeInMainWorld('myAPI', {
     },
     registerShortcut: async (shortcut) => {
         return await ipcRenderer.invoke('registerShortcut', shortcut);
+    },
+    showWindow: (show) => {
+        ipcRenderer.send('showWindow', show);
     },
 });
 

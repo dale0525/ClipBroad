@@ -31,7 +31,3 @@ export function removeItem(state, index) {
 export function setItemUploaded(state, index) {
     state.items[index].uploaded = true;
 }
-
-export function toggleActionBtn(state, toggled) {
-    state.actionBtn = toggled;
-}

@@ -13,7 +13,3 @@ export function removeItem({ commit }, index) {
 export function setItemUploaded({ commit }, index) {
     commit('setItemUploaded', index);
 }
-
-export function toggleActionBtn({ commit }, toggled) {
-    commit('toggleActionBtn', toggled);
-}

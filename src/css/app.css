@@ -1,1 +1,4 @@
 /* app global css */
+::-webkit-scrollbar {
+    width: 0px; /* Remove scrollbar space */
+}
