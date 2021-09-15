@@ -1,7 +1,13 @@
 <template>
     <q-page class="q-pa-md">
         <q-card style="position: sticky; top: 0" class="z-top q-mb-md">
-            <q-input standout v-model="search" maxlength="50" debounce="300">
+            <q-input
+                standout
+                v-model="search"
+                maxlength="50"
+                debounce="300"
+                ref="searchInput"
+            >
                 <template v-slot:prepend>
                     <q-icon name="search" />
                 </template>
@@ -1230,6 +1236,7 @@
         },
         mounted() {
             this.initGithub();
+            this.$refs.searchInput.focus();
         },
         created() {
             this.$i18n.locale = this.$q.lang.getLocale();
