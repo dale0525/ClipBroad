@@ -89,7 +89,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Support other common binary files
 - [x] Settings for dark mode
 - [x] Settings for desktop shortcut
-- [ ] Search function
+- [x] Search function
 - [ ] Redirect to app after Github login on mobile
 - [ ] Auto update for Windows & Mac
 - [ ] Auto update for iOS & Android

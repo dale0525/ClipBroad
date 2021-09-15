@@ -87,7 +87,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] 支持常用文件类型
 - [x] 设置夜间模式
 - [x] 设置唤起快捷键
-- [ ] 搜索功能
+- [x] 搜索功能
 - [ ] 移动端登录Github后自动跳转到APP
 - [ ] 桌面端自动更新
 - [ ] 移动端自动更新

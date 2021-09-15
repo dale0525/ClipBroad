@@ -1,7 +1,0 @@
-{
-  "appId": "com.logiconsole.clipbroad",
-  "appName": "ClipBroad",
-  "bundledWebRuntime": false,
-  "npmClient": "npm",
-  "webDir": "www"
-}
