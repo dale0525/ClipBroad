@@ -1236,26 +1236,32 @@
         },
         mounted() {
             this.initGithub();
-            this.$nextTick(() => {
-                this.$refs.searchInput.focus();
-            });
+            if (this.$q.platform.is.electron) {
+                this.$nextTick(() => {
+                    this.$refs.searchInput.focus();
+                });
+            }
         },
         created() {
             this.$i18n.locale = this.$q.lang.getLocale();
             this.setDarkMode();
-            let shortcutArray = this.$q.localStorage.has('clipbroad-shortcut')
-                ? this.$q.localStorage.getItem('clipbroad-shortcut')
-                : config.defaultSettings.shortcut;
-            window.myAPI.registerShortcut(JSON.stringify(shortcutArray));
+            if (this.$q.platform.is.electron) {
+                let shortcutArray = this.$q.localStorage.has(
+                    'clipbroad-shortcut'
+                )
+                    ? this.$q.localStorage.getItem('clipbroad-shortcut')
+                    : config.defaultSettings.shortcut;
+                window.myAPI.registerShortcut(JSON.stringify(shortcutArray));
+                let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
+                    ? this.$q.localStorage.getItem('clipbroad-hide-icon')
+                    : config.defaultSettings.hideIcon;
+                window.myAPI.setHideIcon(hideIcon);
+            }
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow, false);
                 window.addEventListener('setDarkMode', this.setDarkMode, false);
                 existEventListen = true;
             }
-            let hideIcon = this.$q.localStorage.has('clipbroad-hide-icon')
-                ? this.$q.localStorage.getItem('clipbroad-hide-icon')
-                : config.defaultSettings.hideIcon;
-            window.myAPI.setHideIcon(hideIcon);
             if (this.$q.platform.is.cordova) {
                 if (!openWithInited) this.setupOpenwith();
             }
