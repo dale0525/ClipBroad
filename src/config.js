@@ -19,4 +19,5 @@ export default {
     githubClientID: 'fa79756f53d8c0a88ddd',
     autoSyncInterval: 30000,
     checkClipboardInterval: 500,
+    githubTokenResetThreshold: 5,
 };

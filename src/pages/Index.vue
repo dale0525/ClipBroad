@@ -1,39 +1,40 @@
 <template>
-    <q-page class="q-pa-md">
-        <q-card style="position: sticky; top: 0" class="z-top q-mb-md">
-            <q-input
-                standout
-                v-model="search"
-                maxlength="50"
-                debounce="300"
-                ref="searchInput"
-            >
-                <template v-slot:prepend>
-                    <q-icon name="search" />
-                </template>
-                <template v-slot:append>
-                    <q-icon
-                        v-if="search !== ''"
-                        name="close"
-                        @click="search = ''"
-                    />
-                </template>
+    <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
+        <q-page class="q-pa-md">
+            <q-card style="position: sticky; top: 0" class="z-top q-mb-md">
+                <q-input
+                    standout
+                    v-model="search"
+                    maxlength="50"
+                    debounce="300"
+                    ref="searchInput"
+                >
+                    <template v-slot:prepend>
+                        <q-icon name="search" />
+                    </template>
+                    <template v-slot:append>
+                        <q-icon
+                            v-if="search !== ''"
+                            name="close"
+                            @click="search = ''"
+                        />
+                    </template>
 
-                <template v-slot:after>
-                    <q-item to="/settings" clickable>
-                        <q-icon name="settings" class="absolute-center" />
-                    </q-item>
-                </template>
-            </q-input>
-        </q-card>
-        <q-spinner
-            color="primary"
-            size="5em"
-            :thickness="10"
-            class="fixed-center"
-            v-if="loading"
-        />
-        <q-pull-to-refresh @refresh="syncNow" color="black" icon="autorenew">
+                    <template v-slot:after>
+                        <q-item to="/settings" clickable>
+                            <q-icon name="settings" class="absolute-center" />
+                        </q-item>
+                    </template>
+                </q-input>
+            </q-card>
+            <q-spinner
+                color="primary"
+                size="5em"
+                :thickness="10"
+                class="fixed-center"
+                v-if="loading"
+            />
+
             <q-list bordered separator v-if="filterItemIndex.length > 0">
                 <transition-group
                     appear
@@ -74,6 +75,8 @@
                                     ? 'N/A'
                                     : items[index].remoteSha
                             }}
+                            <br />
+                            {{ items[index].fromShare }}
                         </q-tooltip>
                         <q-item-section avatar v-if="actionBtn">
                             <q-checkbox
@@ -153,8 +156,8 @@
                     />
                 </div>
             </q-toolbar>
-        </q-pull-to-refresh>
-    </q-page>
+        </q-page>
+    </q-pull-to-refresh>
 </template>
 
 <script>
@@ -177,6 +180,7 @@
     var deletedMd5 = [];
     var updateTimeout = null;
     var uploadTimeout = null;
+    var initGithubCount = 0;
 
     export default defineComponent({
         components: {
@@ -221,6 +225,7 @@
                 'updateRemoteParam',
                 'removeItem',
                 'setItemUploaded',
+                'resetItems',
             ]),
             checkClipboard() {
                 if (this.$q.platform.is.electron) {
@@ -615,6 +620,8 @@
                         })
                         .catch((error) => {
                             console.log(error);
+                            updating = false;
+                            clearTimeout(updateTimeout);
                             reject(error);
                         });
                 });
@@ -831,12 +838,11 @@
                     this.$router.push('/settings');
                 } else {
                     this.updateFromGithub()
-                        .then(() => {
-                            this.uploadToGithub();
-                            setTimeout(done, 1000);
-                        })
+                        .then(this.uploadToGithub())
+                        .then(setTimeout(done, 1000))
                         .catch((error) => {
                             console.log(error);
+                            this.reSync();
                         });
                 }
             },
@@ -1150,7 +1156,8 @@
                                 console.log(error);
                                 toUploadTree = [];
                                 uploading = false;
-                                this.$q.notify(this.$t('error'));
+                                this.$q.notify(this.$t('error2'));
+                                this.reSync();
                             });
                     } else {
                         for (
@@ -1173,12 +1180,19 @@
             selectAll() {
                 this.toDeleteItems = [];
                 if (this.isAllSelected === true) {
-                    for (let i = 0; i < this.items.length; i++) {
-                        this.toDeleteItems.push(i);
+                    for (let i = 0; i < this.filterItemIndex.length; i++) {
+                        this.toDeleteItems.push(this.filterItemIndex[i]);
                     }
                 }
             },
             initGithub() {
+                if (initGithubCount > config.githubTokenResetThreshold) {
+                    initGithubCount = 0;
+                    this.$q.localStorage.remove('clipbroad-github-token');
+                    this.$githubInstance.github = null;
+                    this.$router.push('/settings');
+                    return;
+                }
                 if (this.$q.localStorage.has('clipbroad-github-token')) {
                     this.$q.notify(this.$t('connectingGithub'));
                     this.$setGithub(
@@ -1192,9 +1206,14 @@
                                 .then(() => {
                                     this.$q.notify(this.$t('updated'));
                                     this.resetTimer();
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                    this.reSync();
                                 });
                         })
                         .catch(() => {
+                            initGithubCount++;
                             this.$q.notify(this.$t('error'));
                             setTimeout(() => {
                                 this.initGithub();
@@ -1237,6 +1256,13 @@
                     }
                 }
                 return content;
+            },
+            reSync() {
+                this.resetItems();
+                toUploadTree = [];
+                deletedMd5 = [];
+                this.toDeleteItems = [];
+                this.syncNow();
             },
         },
         mounted() {

@@ -13,3 +13,7 @@ export function removeItem({ commit }, index) {
 export function setItemUploaded({ commit }, index) {
     commit('setItemUploaded', index);
 }
+
+export function resetItems({ commit }) {
+    commit('resetItems');
+}
