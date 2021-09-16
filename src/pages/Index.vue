@@ -979,6 +979,7 @@
                                     fileName: fileName,
                                     remotePath: remotePath,
                                     remoteSha: remoteSha,
+                                    fromShare: fromShare,
                                 });
                                 resolve();
                             } else {
@@ -1003,6 +1004,7 @@
                                             fileName: fileName,
                                             remotePath: remotePath,
                                             remoteSha: remoteSha,
+                                            fromShare: fromShare,
                                         });
                                         resolve();
                                     });
@@ -1018,6 +1020,7 @@
                                 fileName: fileName,
                                 remotePath: remotePath,
                                 remoteSha: remoteSha,
+                                fromShare: fromShare,
                             });
                             resolve();
                         }
@@ -1069,6 +1072,7 @@
                                 fileName: fileName,
                                 remotePath: newPath,
                                 remoteSha: localItem.remoteSha,
+                                fromShare: fromShare,
                             });
                             resolve();
                         } else {
@@ -1082,6 +1086,7 @@
                                 fileName: fileName,
                                 remotePath: null,
                                 remoteSha: null,
+                                fromShare: fromShare,
                             });
                             resolve();
                         }
