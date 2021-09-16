@@ -287,8 +287,6 @@
                     return 'apps';
                 } else if (type == 'text') {
                     return 'subject';
-                } else if (config.textExt.includes(type)) {
-                    return 'text_fields';
                 } else if (config.imageExt.includes(type)) {
                     return 'image';
                 } else if (config.archieveExt.includes(type)) {
@@ -301,6 +299,8 @@
                     return 'movie';
                 } else if (config.audioExt.includes(type)) {
                     return 'audiotrack';
+                } else if (config.textExt.includes(type)) {
+                    return 'text_fields';
                 } else {
                     return 'attachment';
                 }
@@ -595,7 +595,8 @@
                                         fileType,
                                         fileName,
                                         data[i].name,
-                                        data[i].sha
+                                        data[i].sha,
+                                        true,
                                     ).then(() => {
                                         fetched++;
                                         // console.log(`${fetched} / ${toFetch}`);

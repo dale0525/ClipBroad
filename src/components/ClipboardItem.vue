@@ -1,20 +1,76 @@
 <template>
     <q-item-section v-if="type == 'text'">
         <q-item-label class="ellipsis-3-lines">{{ value }}</q-item-label>
+        <q-popup-proxy>
+            <q-card
+                bordered
+                style="width: 80%; height: 60%"
+                class="fixed-center scroll"
+            >
+                <div
+                    class="absolute-center"
+                    style="max-width: 90%; max-height: 90%"
+                >
+                    {{ value }}
+                </div>
+            </q-card>
+        </q-popup-proxy>
     </q-item-section>
     <q-item-section v-if="textExt.includes(type)">
         <q-item-label class="ellipsis-3-lines">{{
             base64ToString(value)
         }}</q-item-label>
+        <q-popup-proxy>
+            <q-card
+                bordered
+                style="width: 80%; height: 60%"
+                class="fixed-center scroll"
+            >
+                <div
+                    class="absolute-center"
+                    style="max-width: 90%; max-height: 90%"
+                >
+                    {{ base64ToString(value) }}
+                </div>
+            </q-card>
+        </q-popup-proxy>
     </q-item-section>
     <q-item-section v-if="type == 'html'">
-        <q-item-label class="ellipsis-3-lines" v-html="value"></q-item-label>
+        <q-item-label class="ellipsis-3-lines">
+            <span v-html="value"></span>
+        </q-item-label>
+        <q-popup-proxy>
+            <q-card
+                bordered
+                style="width: 80%; height: 60%"
+                class="fixed-center scroll"
+            >
+                <div
+                    v-html="value"
+                    class="absolute-center"
+                    style="max-width: 90%; max-height: 90%"
+                ></div>
+            </q-card>
+        </q-popup-proxy>
     </q-item-section>
     <q-item-section v-if="imageExt.includes(type)"
         ><img
             :src="'data:' + getMimeType(type) + ';base64,' + value"
             style="max-height: 300px; object-fit: contain; max-width: 100%"
-    /></q-item-section>
+        />
+        <q-popup-proxy>
+            <q-card
+                bordered
+                style="max-width: 80%; max-height: 80%"
+                class="fixed-center scroll"
+            >
+                <img
+                    :src="'data:' + getMimeType(type) + ';base64,' + value"
+                    style="object-fit: contain"
+                />
+            </q-card>
+        </q-popup-proxy>
+    </q-item-section>
     <q-item-section v-if="videoExt.includes(type)">
         <video
             controls
