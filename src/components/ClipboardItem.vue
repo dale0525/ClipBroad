@@ -62,7 +62,7 @@
             <q-card
                 bordered
                 style="max-width: 80%; max-height: 80%"
-                class="fixed-center scroll"
+                class="fixed-center scroll fit"
             >
                 <img
                     :src="'data:' + getMimeType(type) + ';base64,' + value"
