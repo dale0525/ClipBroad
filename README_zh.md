@@ -105,6 +105,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [ihadeed/cordova-clipboard](https://github.com/ihadeed/cordova-clipboard)
 - [Teamwork/node-auto-launch](https://github.com/Teamwork/node-auto-launch)
 - [broofa/mime](https://github.com/broofa/mime)
+- [EddyVerbruggen/Custom-URL-scheme](https://github.com/EddyVerbruggen/Custom-URL-scheme)
 
 ## 赞助
 支付宝：
