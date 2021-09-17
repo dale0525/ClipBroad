@@ -217,10 +217,10 @@ module.exports = configure(function (ctx) {
             packager: {
                 // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
                 // OS X / Mac App Store
-                // appBundleId: '',
+                appBundleId: 'com.logiconsole.clipbroad',
                 // appCategoryType: '',
                 // osxSign: '',
-                // protocol: 'myapp://path',
+                protocol: 'clipbroad://',
                 // Windows only
                 // win32metadata: { ... }
             },

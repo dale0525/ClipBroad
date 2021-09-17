@@ -48,6 +48,15 @@ if (!gotTheLock) {
     });
 }
 
+// for mac url scheme
+app.on('open-url', (event, url) => {
+    if (!url.includes('clipbroad://token/')) return;
+    const token = url
+        .replace('clipbroad://token/', '')
+        .replace('/', '');
+    mainWindow.webContents.send('getToken', token);
+})
+
 let mainWindow;
 let tray = null;
 let contextMenu = null;

@@ -22,7 +22,7 @@
 - 在移动端双击文字可将其复制到剪贴板，双击其他文件可分享到其他应用
 - 每30秒会自动上传到Github
 - 单击桌面端图标可显示/隐藏主界面
-- 唤起主界面的快捷键为Ctrl+Shift+V(Windows)和Cmd+Shift+V(Mac)(后续版本可配置)
+- 唤起主界面的快捷键为Ctrl+Shift+V(Windows)和Cmd+Shift+V(Mac)(可配置)
 - 移动端可以将常用格式文件分享到本应用(ClipBroad)
 
 ## 截图
@@ -88,7 +88,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] 设置夜间模式
 - [x] 设置唤起快捷键
 - [x] 搜索功能
-- [ ] 移动端登录Github后自动跳转到APP
+- [x] 移动端登录Github后自动跳转到APP
 - [ ] 桌面端自动更新
 - [ ] 移动端自动更新
 - [ ] 提交iOS应用商店

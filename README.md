@@ -24,7 +24,7 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - On mobile, double tap text to copy, or double tap other files to share
 - Items are automatically uploaded every 30 seconds
 - Click tray icon on desktop to show/hide main panel
-- Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (will be configurable in the future)
+- Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (configurable)
 - Files of common type can be shared to this app (ClipBroad) on mobile
 
 ## Screenshots
@@ -90,7 +90,7 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Settings for dark mode
 - [x] Settings for desktop shortcut
 - [x] Search function
-- [ ] Redirect to app after Github login on mobile
+- [x] Redirect to app after Github login on mobile
 - [ ] Auto update for Windows & Mac
 - [ ] Auto update for iOS & Android
 - [ ] Upload to App Store(iOS)

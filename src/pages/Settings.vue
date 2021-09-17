@@ -404,7 +404,9 @@
                         });
                 }
             },
-            handleOpenURL(url) {    // for cordova
+        },
+        mounted() {
+            window.handleOpenURL = (url) => {
                 if (!url.includes('clipbroad://token/')) return;
                 let token = url
                     .replace('clipbroad://token/', '')
@@ -412,9 +414,7 @@
                 this.$q.localStorage.set('clipbroad-github-token', token);
                 this.$githubInstance.github = null;
                 this.setToken(token);
-            },
-        },
-        mounted() {
+            };
             // this.$q.localStorage.remove('clipbroad-github-token');
             if (this.$q.localStorage.has('clipbroad-github-token')) {
                 this.setToken(
