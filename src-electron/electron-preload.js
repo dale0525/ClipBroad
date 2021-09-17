@@ -20,6 +20,7 @@ const {
     contextBridge,
     nativeImage,
     ipcRenderer,
+    shell,
 } = require('electron');
 contextBridge.exposeInMainWorld('myAPI', {
     writeClipboardText: (text) => {
@@ -198,9 +199,18 @@ contextBridge.exposeInMainWorld('myAPI', {
     showWindow: (show) => {
         ipcRenderer.send('showWindow', show);
     },
+    openSystemBrowser: (url) => {
+        ipcRenderer.send('doNotHide');
+        shell.openExternal(url);
+    },
 });
 
 ipcRenderer.on('Sync', () => {
     var evt = new CustomEvent('Sync');
+    window.dispatchEvent(evt);
+});
+
+ipcRenderer.on('getToken', (e, token) => {
+    var evt = new CustomEvent('getToken', {'detail': {token: token}});
     window.dispatchEvent(evt);
 });

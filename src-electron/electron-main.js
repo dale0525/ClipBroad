@@ -9,7 +9,6 @@ import {
 } from 'electron';
 import path from 'path';
 const AutoLaunch = require('auto-launch');
-const { Deeplink } = require('electron-deeplink');
 
 try {
     if (
@@ -25,12 +24,34 @@ try {
     }
 } catch (_) {}
 
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, argv, workingDirectory) => {
+        // Someone tried to run a second instance, we should focus our window.
+        if (mainWindow) {
+            mainWindow.show();
+            setTimeout(() => {
+                shouldHide = true;
+            }, 1000);
+        }
+        if (argv.length > 2) {
+            const uri = argv[2];
+            if (!uri.includes('clipbroad://token/')) return;
+            const token = uri
+                .replace('clipbroad://token/', '')
+                .replace('/', '');
+            mainWindow.webContents.send('getToken', token);
+        }
+    });
+}
+
 let mainWindow;
 let tray = null;
 let contextMenu = null;
-const isDev = !process.env.PROD;
-const protocol = 'clipbroad';
-const deeplink = new Deeplink({ app, mainWindow, protocol, isDev });
+let shouldHide = true;
 
 function createWindow() {
     /**
@@ -109,6 +130,8 @@ app.on('ready', () => {
     if (process.platform === 'win32') {
         app.setAppUserModelId(app.name);
     }
+
+    app.setAsDefaultProtocolClient('clipbroad');
 });
 
 app.on('window-all-closed', () => {
@@ -124,7 +147,10 @@ app.on('activate', () => {
 });
 
 app.on('browser-window-blur', () => {
-    mainWindow.hide();
+    if (shouldHide)
+    {
+        mainWindow.hide();
+    }
 });
 
 ipcMain.on('hideWindow', () => {
@@ -133,21 +159,15 @@ ipcMain.on('hideWindow', () => {
 
 ipcMain.on('hideIcon', (e, hide) => {
     if (hide) {
-        if (process.platform === 'darwin')
-        {
+        if (process.platform === 'darwin') {
             app.dock.hide();
-        }
-        else
-        {
+        } else {
             mainWindow.setSkipTaskbar(true);
         }
     } else {
-        if (process.platform === 'darwin')
-        {
+        if (process.platform === 'darwin') {
             app.dock.show();
-        }
-        else
-        {
+        } else {
             mainWindow.setSkipTaskbar(false);
         }
     }
@@ -193,6 +213,6 @@ ipcMain.on('showWindow', (e, show) => {
     show ? mainWindow.show() : mainWindow.hide();
 });
 
-deeplink.on('received', (link) => {
-    mainWindow.show();
+ipcMain.on('doNotHide', ()=> {
+    shouldHide = false;
 });

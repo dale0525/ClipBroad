@@ -238,12 +238,11 @@
     import { openURL, uid } from 'quasar';
     import { ref } from 'vue';
     import config from 'src/config.js';
-    let checkLogginInterval = null;
-    let loggin = false;
     let hasToken = ref(false);
     let username = ref('');
     let avatarUrl = ref('');
     let rateLimit = ref(null);
+    let existEventListen = false;
 
     export default {
         data() {
@@ -308,10 +307,12 @@
             auth() {
                 let uuid = uid();
                 this.$q.localStorage.set('clipbroad-github-state', uuid);
-                openURL(
-                    `https://github.com/login/oauth/authorize?client_id=${config.githubClientID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`
-                );
-                loggin = true;
+                const url = `https://github.com/login/oauth/authorize?client_id=${config.githubClientID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`;
+                if (this.$q.platform.is.electron) {
+                    window.myAPI.openSystemBrowser(url);
+                } else {
+                    openURL(url);
+                }
             },
 
             logout() {
@@ -327,7 +328,6 @@
             },
             setToken(_token) {
                 hasToken.value = true;
-                loggin = false;
                 this.$setGithub(_token)
                     .then(({ data }) => {
                         username.value = data.username;
@@ -404,6 +404,15 @@
                         });
                 }
             },
+            handleOpenURL(url) {    // for cordova
+                if (!url.includes('clipbroad://token/')) return;
+                let token = url
+                    .replace('clipbroad://token/', '')
+                    .replace('/', '');
+                this.$q.localStorage.set('clipbroad-github-token', token);
+                this.$githubInstance.github = null;
+                this.setToken(token);
+            },
         },
         mounted() {
             // this.$q.localStorage.remove('clipbroad-github-token');
@@ -412,36 +421,21 @@
                     this.$q.localStorage.getItem('clipbroad-github-token')
                 );
             }
-            loggin = false;
-            if (checkLogginInterval == null) {
-                checkLogginInterval = setInterval(() => {
-                    if (!loggin) {
-                        return;
-                    }
-                    this.$axios
-                        .post('https://api.logictan.workers.dev/corsproxy/', {
-                            state: this.$q.localStorage.getItem(
-                                'clipbroad-github-state'
-                            ),
-                        })
-                        .then(({ data }) => {
-                            if (data.status != 'success') {
-                                // console.log(data.message);
-                            } else {
-                                // console.log(`access token is ${data.message}`);
-                                this.$q.localStorage.set(
-                                    'clipbroad-github-token',
-                                    data.message
-                                );
-                                this.setToken(data.message);
-                                if (this.$q.platform.is.electron)
-                                    window.myAPI.showWindow(true);
-                            }
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                }, 2000);
+            if (!existEventListen) {
+                window.addEventListener(
+                    'getToken',
+                    (e) => {
+                        var token = e.detail.token;
+                        this.$q.localStorage.set(
+                            'clipbroad-github-token',
+                            token
+                        );
+                        this.$githubInstance.github = null;
+                        this.setToken(token);
+                    },
+                    false
+                );
+                existEventListen = true;
             }
             this.$getRateLimit()
                 .then(({ message }) => {
