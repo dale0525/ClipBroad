@@ -276,7 +276,9 @@
                     : config.defaultSettings.maxFileSize,
                 shortcutArray: this.$q.localStorage.has('clipbroad-shortcut')
                     ? this.$q.localStorage.getItem('clipbroad-shortcut')
-                    : config.defaultSettings.shortcut,
+                    : this.$q.platform.is.mac
+                    ? config.defaultSettings.shortcut.mac
+                    : config.defaultSettings.shortcut.win,
                 setShortcutStart: false,
                 validShortcut: true,
                 registerShortcutSuccess: true,
@@ -297,7 +299,7 @@
                 return rateLimit.value;
             },
             shortcut() {
-                return this.shortcutArray.join('+');
+                return this.shortcutArray.join('+').replace('Meta', 'Command');
             },
             // appVisible() {
             //     return this.$q.appVisible;
