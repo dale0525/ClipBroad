@@ -26,6 +26,7 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - Click tray icon on desktop to show/hide main panel
 - Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (configurable)
 - Files of common type can be shared to this app (ClipBroad) on mobile
+- Right click or long tap on an item to preview (if possible for some item types)
 
 ## Screenshots
 Android:

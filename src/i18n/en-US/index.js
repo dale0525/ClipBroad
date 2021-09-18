@@ -39,4 +39,7 @@ export default {
     githubError: 'An error occurred when connecting to Github. Will retry in 2 seconds...',
     connectingGithub: 'Connecting to Github...',
     connectedGithub: 'Connected to Github.',
+    newVersionCheck: 'Checking for new version...',
+    newVersionAvailable: 'A new version is available',
+    newVersionNotAvailable: 'Already the latest version!',
 };

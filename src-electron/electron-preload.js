@@ -203,6 +203,9 @@ contextBridge.exposeInMainWorld('myAPI', {
         ipcRenderer.send('doNotHide');
         shell.openExternal(url);
     },
+    checkVersion: () => {
+        ipcRenderer.send('checkVersion');
+    },
 });
 
 ipcRenderer.on('Sync', () => {
@@ -211,6 +214,13 @@ ipcRenderer.on('Sync', () => {
 });
 
 ipcRenderer.on('getToken', (e, token) => {
-    var evt = new CustomEvent('getToken', {'detail': {token: token}});
+    var evt = new CustomEvent('getToken', { detail: { token: token } });
+    window.dispatchEvent(evt);
+});
+
+ipcRenderer.on('version-check', (e, payload) => {
+    var evt = new CustomEvent('version-check', {
+        detail: { message: payload.message, value: payload.value },
+    });
     window.dispatchEvent(evt);
 });

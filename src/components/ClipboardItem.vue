@@ -1,7 +1,7 @@
 <template>
     <q-item-section v-if="type == 'text'">
         <q-item-label class="ellipsis-3-lines">{{ value }}</q-item-label>
-        <q-popup-proxy>
+        <q-popup-proxy context-menu>
             <q-card
                 bordered
                 style="width: 80%; height: 60%"
@@ -20,7 +20,7 @@
         <q-item-label class="ellipsis-3-lines">{{
             base64ToString(value)
         }}</q-item-label>
-        <q-popup-proxy>
+        <q-popup-proxy context-menu>
             <q-card
                 bordered
                 style="width: 80%; height: 60%"
@@ -39,7 +39,7 @@
         <q-item-label class="ellipsis-3-lines">
             <span v-html="value"></span>
         </q-item-label>
-        <q-popup-proxy>
+        <q-popup-proxy context-menu>
             <q-card
                 bordered
                 style="width: 80%; height: 60%"
@@ -58,7 +58,7 @@
             :src="'data:' + getMimeType(type) + ';base64,' + value"
             style="max-height: 300px; object-fit: contain; max-width: 100%"
         />
-        <q-popup-proxy>
+        <q-popup-proxy context-menu>
             <q-card
                 bordered
                 style="max-width: 80%; max-height: 80%"

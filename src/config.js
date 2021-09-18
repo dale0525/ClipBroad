@@ -26,7 +26,7 @@ export default {
     archieveExt: ['zip', '7z', 'rar'],
     excelExt: ['xls', 'xlsx', 'xlsm'],
     wordExt: ['doc', 'docx'],
-    textExt: ['txt', 'inf', 'rtf', 'json', 'yaml', 'md'],
+    textExt: ['txt', 'inf', 'rtf', 'json', 'yaml', 'yml', 'md'],
     defaultSettings: {
         hideIcon: false,
         autoLaunch: false,

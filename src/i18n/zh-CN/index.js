@@ -39,4 +39,7 @@ export default {
     githubError: '连接Github时出错，将在2秒后重试...',
     connectingGithub: '连接Github中...',
     connectedGithub: 'Github已连接',
+    newVersionCheck: '正在检查更新...',
+    newVersionAvailable: '发现新版本！',
+    newVersionNotAvailable: '已经是最新版本',
 };

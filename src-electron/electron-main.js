@@ -9,6 +9,7 @@ import {
 } from 'electron';
 import path from 'path';
 const AutoLaunch = require('auto-launch');
+const { autoUpdater } = require('electron-updater');
 
 try {
     if (
@@ -51,11 +52,9 @@ if (!gotTheLock) {
 // for mac url scheme
 app.on('open-url', (event, url) => {
     if (!url.includes('clipbroad://token/')) return;
-    const token = url
-        .replace('clipbroad://token/', '')
-        .replace('/', '');
+    const token = url.replace('clipbroad://token/', '').replace('/', '');
     mainWindow.webContents.send('getToken', token);
-})
+});
 
 let mainWindow;
 let tray = null;
@@ -141,6 +140,8 @@ app.on('ready', () => {
     }
 
     app.setAsDefaultProtocolClient('clipbroad');
+
+    autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('window-all-closed', () => {
@@ -156,8 +157,7 @@ app.on('activate', () => {
 });
 
 app.on('browser-window-blur', () => {
-    if (shouldHide)
-    {
+    if (shouldHide) {
         mainWindow.hide();
     }
 });
@@ -222,6 +222,59 @@ ipcMain.on('showWindow', (e, show) => {
     show ? mainWindow.show() : mainWindow.hide();
 });
 
-ipcMain.on('doNotHide', ()=> {
+ipcMain.on('doNotHide', () => {
     shouldHide = false;
+});
+
+ipcMain.on('checkVersion', () => {
+    console.log(1);
+    autoUpdater.checkForUpdates();
+});
+
+autoUpdater.on('checking-for-update', () => {
+    mainWindow.webContents.send('version-check', {
+        message: 'newVersionCheck',
+        value: 0,
+    });
+});
+
+autoUpdater.on('update-available', () => {
+    mainWindow.webContents.send('version-check', {
+        message: 'newVersionAvailable',
+        value: 0,
+    });
+});
+
+autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('version-check', {
+        message: 'newVersionNotAvailable',
+        value: 0,
+    });
+});
+
+autoUpdater.on('error', (error) => {
+    mainWindow.webContents.send('version-check', {
+        message: error,
+        value: 0,
+    });
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    let log_message =
+        Math.round(progressObj.percent * 100) / 100 +
+        '% (' +
+        (progressObj.transferred > 1024 * 1024 ? Math.round(progressObj.transferred / 1024 / 1024 * 100) / 100 + 'MB' : Math.round(progressObj.transferred / 1024 * 100) / 100 + 'KB') +
+        '/' +
+        (progressObj.total > 1024 * 1024 ? Math.round(progressObj.total / 1024 / 1024 * 100) / 100 + 'MB' : Math.round(progressObj.total / 1024 * 100) / 100 + 'KB') +
+        ') @ ' +
+        (progressObj.bytesPerSecond > 1024 * 1024 ? Math.round(progressObj.bytesPerSecond / 1024 / 1024 * 100) / 100 + 'MB/s' : Math.round(progressObj.bytesPerSecond / 1024) + 'KB/s');
+    let progressValue = progressObj.percent / 100;
+    mainWindow.webContents.send('version-check', {
+        message: log_message,
+        value: progressValue,
+    });
+});
+
+autoUpdater.on('update-downloaded', () => {
+    autoUpdater.quitAndInstall();
 });

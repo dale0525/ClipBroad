@@ -171,7 +171,24 @@
         <div class="col q-pa-md items-center">
             <div class="q-pa-md">
                 {{ $t('version') }}
-                <q-badge color="primary">{{ version }}</q-badge>
+                <q-badge color="primary" clickable @click="checkVersion()">{{
+                    version
+                }}</q-badge>
+                <q-linear-progress
+                    rounded
+                    size="25px"
+                    :value="checkUpdateValue"
+                    color="primary"
+                    v-if="showUpdateBar"
+                >
+                    <div class="absolute-full flex flex-center">
+                        <q-badge
+                            color="white"
+                            text-color="primary"
+                            :label="checkUpdateMessage"
+                        />
+                    </div>
+                </q-linear-progress>
             </div>
             <div class="q-pa-md">
                 {{ $t('link') }}
@@ -283,6 +300,9 @@
                 validShortcut: true,
                 registerShortcutSuccess: true,
                 version: process.env.VERSION,
+                showUpdateBar: false,
+                checkUpdateMessage: '0%',
+                checkUpdateValue: 0,
             };
         },
         computed: {
@@ -310,11 +330,7 @@
                 let uuid = uid();
                 this.$q.localStorage.set('clipbroad-github-state', uuid);
                 const url = `https://github.com/login/oauth/authorize?client_id=${config.githubClientID}&redirect_uri=https://logiconsole.com/api/clipbroad/oauth&scope=repo&state=${uuid}`;
-                if (this.$q.platform.is.electron) {
-                    window.myAPI.openSystemBrowser(url);
-                } else {
-                    openURL(url);
-                }
+                this.openExternalURL(url);
             },
 
             logout() {
@@ -338,12 +354,11 @@
                     .catch(() => {});
             },
             openExternalURL(url) {
-                openURL(url, null, {
-                    noopener: true,
-                    menubar: true,
-                    toolbar: true,
-                    noreferrer: true,
-                });
+                if (this.$q.platform.is.electron) {
+                    window.myAPI.openSystemBrowser(url);
+                } else {
+                    openURL(url);
+                }
             },
             setShortcut(event) {
                 if (this.$q.platform.is.win && event.metaKey) return;
@@ -406,6 +421,10 @@
                         });
                 }
             },
+            checkVersion() {
+                window.myAPI.checkVersion();
+                this.showUpdateBar = true;
+            },
         },
         mounted() {
             window.handleOpenURL = (url) => {
@@ -434,6 +453,32 @@
                         );
                         this.$githubInstance.github = null;
                         this.setToken(token);
+                    },
+                    false
+                );
+                window.addEventListener(
+                    'version-check',
+                    (e) => {
+                        this.showUpdateBar = true;
+                        var message = e.detail.message;
+                        var value = e.detail.value;
+                        if (
+                            [
+                                'newVersionCheck',
+                                'newVersionAvailable',
+                                'newVersionNotAvailable',
+                            ].includes(message)
+                        ) {
+                            this.checkUpdateMessage = this.$t(message);
+                        } else {
+                            this.checkUpdateMessage = message;
+                        }
+                        if (message == 'newVersionNotAvailable') {
+                            setTimeout(() => {
+                                this.showUpdateBar = false;
+                            }, 1000);
+                        }
+                        this.checkUpdateValue = value;
                     },
                     false
                 );
