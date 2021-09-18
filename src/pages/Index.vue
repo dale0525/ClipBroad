@@ -47,6 +47,7 @@
                         clickable
                         v-ripple
                         @dblclick="copyItem(index)"
+                        @click="showClickTip()"
                         v-touch-hold:500.mouse="
                             () => {
                                 actionBtn = true;
@@ -596,7 +597,7 @@
                                         fileName,
                                         data[i].name,
                                         data[i].sha,
-                                        true,
+                                        true
                                     ).then(() => {
                                         fetched++;
                                         // console.log(`${fetched} / ${toFetch}`);
@@ -1221,6 +1222,10 @@
                             }, 2000);
                         });
                 }
+                else
+                {
+                    this.resetTimer();
+                }
             },
             getTextFromHtml(html) {
                 var temporalDivElement = document.createElement('div');
@@ -1264,6 +1269,23 @@
                 deletedMd5 = [];
                 this.toDeleteItems = [];
                 this.syncNow();
+            },
+            showClickTip() {
+                let clickTipCount = this.$q.localStorage.has(
+                    'clipbroad-click-tip'
+                )
+                    ? this.$q.localStorage.getItem('clipbroad-click-tip')
+                    : 0;
+                if (clickTipCount >= config.clickTipMax) return;
+                if (this.$q.platform.is.electron) {
+                    this.$q.notify(this.$t('clickTipDesktop'));
+                } else if (this.$q.platform.is.cordova) {
+                    this.$q.notify(this.$t('clickTipMobile'));
+                }
+                this.$q.localStorage.set(
+                    'clipbroad-click-tip',
+                    clickTipCount + 1
+                );
             },
         },
         mounted() {

@@ -44,4 +44,5 @@ export default {
     autoSyncInterval: 30000,
     checkClipboardInterval: 500,
     githubTokenResetThreshold: 5,
+    clickTipMax: 3,
 };

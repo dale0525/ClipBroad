@@ -42,4 +42,6 @@ export default {
     newVersionCheck: 'Checking for new version...',
     newVersionAvailable: 'A new version is available',
     newVersionNotAvailable: 'Already the latest version!',
+    clickTipDesktop: 'Double click to copy, right click to preview',
+    clickTipMobile: 'Double tap to copy, tap&hold to preview',
 };
