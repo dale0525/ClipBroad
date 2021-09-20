@@ -94,9 +94,9 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Redirect to app after Github login on mobile
 - [x] ~~Auto update for Windows & Mac~~Auto update for Win & new version notification for Mac
 - [x] Auto update for iOS & Android
-- ~~[ ] Upload to App Store(iOS)~~
-- ~~[ ] Upload to Google Play~~
-- ~~[ ] Linux build~~
+- [ ] ~~Upload to App Store(iOS)~~
+- [ ] ~~Upload to Google Play~~
+- [ ] ~~Linux build~~
 
 ## Credits
 - [Quasar Framework](https://github.com/quasarframework/quasar)

@@ -92,9 +92,9 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] 移动端登录Github后自动跳转到APP
 - [x] ~~桌面端自动更新~~Windows自动更新，Mac更新提示
 - [x] 移动端自动更新
-- ~~[ ] 提交iOS应用商店~~
-- ~~[ ] 提交Google Play~~
-- ~~[ ] Linux打包~~
+- [ ] ~~提交iOS应用商店~~
+- [ ] ~~提交Google Play~~
+- [ ] ~~Linux打包~~
 
 ## 感谢
 - [Quasar Framework](https://github.com/quasarframework/quasar)
