@@ -10,6 +10,10 @@ import {
 import path from 'path';
 const AutoLaunch = require('auto-launch');
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
 
 try {
     if (
@@ -100,6 +104,18 @@ function createWindow() {
     });
 }
 
+function checkUpdate(){
+    if (process.platform === 'win32')
+    {
+        autoUpdater.autoDownload = true;
+    }
+    else
+    {
+        autoUpdater.autoDownload = false;
+    }
+    autoUpdater.checkForUpdates();
+}
+
 app.on('ready', () => {
     createWindow();
     // tray = new Tray(require('path').resolve(__statics, 'favicon-16x16.png'));
@@ -141,7 +157,7 @@ app.on('ready', () => {
 
     app.setAsDefaultProtocolClient('clipbroad');
 
-    autoUpdater.checkForUpdatesAndNotify();
+    checkUpdate();
 });
 
 app.on('window-all-closed', () => {
@@ -227,8 +243,7 @@ ipcMain.on('doNotHide', () => {
 });
 
 ipcMain.on('checkVersion', () => {
-    console.log(1);
-    autoUpdater.checkForUpdates();
+    checkUpdate();
 });
 
 autoUpdater.on('checking-for-update', () => {
@@ -238,10 +253,10 @@ autoUpdater.on('checking-for-update', () => {
     });
 });
 
-autoUpdater.on('update-available', () => {
+autoUpdater.on('update-available', (info) => {
     mainWindow.webContents.send('version-check', {
         message: 'newVersionAvailable',
-        value: 0,
+        value: info.releaseNotes,
     });
 });
 
@@ -254,8 +269,8 @@ autoUpdater.on('update-not-available', () => {
 
 autoUpdater.on('error', (error) => {
     mainWindow.webContents.send('version-check', {
-        message: error,
-        value: 0,
+        message: 'error',
+        value: JSON.stringify(error),
     });
 });
 
@@ -263,11 +278,20 @@ autoUpdater.on('download-progress', (progressObj) => {
     let log_message =
         Math.round(progressObj.percent * 100) / 100 +
         '% (' +
-        (progressObj.transferred > 1024 * 1024 ? Math.round(progressObj.transferred / 1024 / 1024 * 100) / 100 + 'MB' : Math.round(progressObj.transferred / 1024 * 100) / 100 + 'KB') +
+        (progressObj.transferred > 1024 * 1024
+            ? Math.round((progressObj.transferred / 1024 / 1024) * 100) / 100 +
+              'MB'
+            : Math.round((progressObj.transferred / 1024) * 100) / 100 + 'KB') +
         '/' +
-        (progressObj.total > 1024 * 1024 ? Math.round(progressObj.total / 1024 / 1024 * 100) / 100 + 'MB' : Math.round(progressObj.total / 1024 * 100) / 100 + 'KB') +
+        (progressObj.total > 1024 * 1024
+            ? Math.round((progressObj.total / 1024 / 1024) * 100) / 100 + 'MB'
+            : Math.round((progressObj.total / 1024) * 100) / 100 + 'KB') +
         ') @ ' +
-        (progressObj.bytesPerSecond > 1024 * 1024 ? Math.round(progressObj.bytesPerSecond / 1024 / 1024 * 100) / 100 + 'MB/s' : Math.round(progressObj.bytesPerSecond / 1024) + 'KB/s');
+        (progressObj.bytesPerSecond > 1024 * 1024
+            ? Math.round((progressObj.bytesPerSecond / 1024 / 1024) * 100) /
+                  100 +
+              'MB/s'
+            : Math.round(progressObj.bytesPerSecond / 1024) + 'KB/s');
     let progressValue = progressObj.percent / 100;
     mainWindow.webContents.send('version-check', {
         message: log_message,

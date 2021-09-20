@@ -303,6 +303,7 @@
                 showUpdateBar: false,
                 checkUpdateMessage: '0%',
                 checkUpdateValue: 0,
+                newVersionPopup: false,
             };
         },
         computed: {
@@ -422,8 +423,18 @@
                 }
             },
             checkVersion() {
-                window.myAPI.checkVersion();
-                this.showUpdateBar = true;
+                if (this.$q.platform.is.electron) {
+                    window.myAPI.checkVersion();
+                    this.showUpdateBar = true;
+                }
+                else if (this.$q.platform.is.android)
+                {
+                    codePush.sync(null, { updateDialog: true, installMode: InstallMode.IMMEDIATE });
+                }
+                else if (this.$q.platform.is.ios)
+                {
+                    codePush.sync();
+                }
             },
         },
         mounted() {
@@ -470,10 +481,15 @@
                             ].includes(message)
                         ) {
                             this.checkUpdateMessage = this.$t(message);
+                        } else if (message == 'error') {
+                            this.checkUpdateMessage = value;
                         } else {
                             this.checkUpdateMessage = message;
                         }
-                        if (message == 'newVersionNotAvailable') {
+                        if (
+                            message == 'newVersionNotAvailable' ||
+                            message == 'error'
+                        ) {
                             setTimeout(() => {
                                 this.showUpdateBar = false;
                             }, 1000);

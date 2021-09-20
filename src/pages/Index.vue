@@ -46,8 +46,7 @@
                         :key="index"
                         clickable
                         v-ripple
-                        @dblclick="copyItem(index)"
-                        @click="showClickTip()"
+                        @click="handleClick(index)"
                         v-touch-hold:500.mouse="
                             () => {
                                 actionBtn = true;
@@ -105,10 +104,9 @@
                                 :name="itemIcon(items[index].type)"
                             />
                         </q-item-section>
-                        <ClipboardItem
+                        <ClipboardItem :ref="`clipboardItem${index}`"
                             :type="items[index].type"
                             :value="items[index].value.toString()"
-                            :key="items[index].md5"
                             :fileName="items[index].fileName"
                         />
                         <q-item-section side>
@@ -182,6 +180,7 @@
     var updateTimeout = null;
     var uploadTimeout = null;
     var initGithubCount = 0;
+    var clickTimeout = null;
 
     export default defineComponent({
         components: {
@@ -1221,9 +1220,7 @@
                                 this.initGithub();
                             }, 2000);
                         });
-                }
-                else
-                {
+                } else {
                     this.resetTimer();
                 }
             },
@@ -1270,22 +1267,23 @@
                 this.toDeleteItems = [];
                 this.syncNow();
             },
-            showClickTip() {
-                let clickTipCount = this.$q.localStorage.has(
-                    'clipbroad-click-tip'
-                )
-                    ? this.$q.localStorage.getItem('clipbroad-click-tip')
-                    : 0;
-                if (clickTipCount >= config.clickTipMax) return;
-                if (this.$q.platform.is.electron) {
-                    this.$q.notify(this.$t('clickTipDesktop'));
-                } else if (this.$q.platform.is.cordova) {
-                    this.$q.notify(this.$t('clickTipMobile'));
+            previewItem(index){
+                clickTimeout = null;
+                this.$refs[`clipboardItem${index}`].onPopup();
+            },
+            handleClick(index){
+                if (clickTimeout != null)
+                {
+                    clearTimeout(clickTimeout);
+                    clickTimeout = null;
+                    this.copyItem(index);
                 }
-                this.$q.localStorage.set(
-                    'clipbroad-click-tip',
-                    clickTipCount + 1
-                );
+                else
+                {
+                    clickTimeout = setTimeout(() => {
+                        this.previewItem(index);
+                    }, config.doubleClickThreshold);
+                }
             },
         },
         mounted() {

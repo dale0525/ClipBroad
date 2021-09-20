@@ -42,6 +42,6 @@ export default {
     newVersionCheck: '正在检查更新...',
     newVersionAvailable: '发现新版本！',
     newVersionNotAvailable: '已经是最新版本',
-    clickTipDesktop: '双击复制，右击预览',
-    clickTipMobile: '双击复制，长按预览',
+    skip: '忽略',
+    download: '下载'
 };

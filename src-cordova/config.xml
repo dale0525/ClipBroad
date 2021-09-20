@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.logiconsole.clipbroad" version="0.5.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.logiconsole.clipbroad" version="0.9.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>ClipBroad</name>
     <description>Sync your clipboard across multiple devices</description>
     <author email="dev@cordova.apache.org" href="http://cordova.io">
@@ -33,6 +33,7 @@
         <splash density="port-xxhdpi" src="res/screen/android/splash-port-xxhdpi.png" />
         <splash density="land-xxxhdpi" src="res/screen/android/splash-land-xxxhdpi.png" />
         <splash density="port-xxxhdpi" src="res/screen/android/splash-port-xxxhdpi.png" />
+        <preference name="CodePushDeploymentKey" value="zBRhbVvEay7PIp8dKJ8ZsOFPLfeOm-P8Q08Eh" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />

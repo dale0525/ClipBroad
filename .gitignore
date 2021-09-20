@@ -16,3 +16,4 @@ out/
 my-release-key.keystore
 
 ._*
+mac_cert.p12

@@ -45,4 +45,5 @@ export default {
     checkClipboardInterval: 500,
     githubTokenResetThreshold: 5,
     clickTipMax: 3,
+    doubleClickThreshold: 300,
 };

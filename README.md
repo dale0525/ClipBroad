@@ -26,7 +26,7 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - Click tray icon on desktop to show/hide main panel
 - Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (configurable)
 - Files of common type can be shared to this app (ClipBroad) on mobile
-- Right click or long tap on an item to preview (if possible for some item types)
+- Click on an item to preview (if possible for some item types)
 
 ## Screenshots
 Android:
@@ -92,11 +92,11 @@ quasar build -m cordova [-T android] [-T ios]
 - [x] Settings for desktop shortcut
 - [x] Search function
 - [x] Redirect to app after Github login on mobile
-- [ ] Auto update for Windows & Mac
-- [ ] Auto update for iOS & Android
-- [ ] Upload to App Store(iOS)
-- [ ] Upload to Google Play
-- [ ] Linux build
+- [x] ~~Auto update for Windows & Mac~~Auto update for Win & new version notification for Mac
+- [x] Auto update for iOS & Android
+- ~~[ ] Upload to App Store(iOS)~~
+- ~~[ ] Upload to Google Play~~
+- ~~[ ] Linux build~~
 
 ## Credits
 - [Quasar Framework](https://github.com/quasarframework/quasar)

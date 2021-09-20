@@ -1,75 +1,65 @@
 <template>
     <q-item-section v-if="type == 'text'">
         <q-item-label class="ellipsis-3-lines">{{ value }}</q-item-label>
-        <q-popup-proxy context-menu>
-            <q-card
-                bordered
-                style="width: 80%; height: 60%"
-                class="fixed-center scroll"
-            >
-                <div
-                    class="absolute-center"
-                    style="max-width: 90%; max-height: 90%"
+        <q-dialog v-model="popup" auto-close class="z-max">
+            <q-card class="q-pa-md">
+                <pre
+                    style="
+                        white-space: pre-wrap;
+                        word-warp: break-word;
+                        word-break: break-all;
+                    "
+                    >{{ value }}</pre
                 >
-                    {{ value }}
-                </div>
             </q-card>
-        </q-popup-proxy>
+        </q-dialog>
     </q-item-section>
     <q-item-section v-if="textExt.includes(type)">
         <q-item-label class="ellipsis-3-lines">{{
             base64ToString(value)
         }}</q-item-label>
-        <q-popup-proxy context-menu>
-            <q-card
-                bordered
-                style="width: 80%; height: 60%"
-                class="fixed-center scroll"
-            >
-                <div
-                    class="absolute-center"
-                    style="max-width: 90%; max-height: 90%"
+        <q-dialog v-model="popup" auto-close class="z-max">
+            <q-card class="q-pa-md">
+                <pre
+                    style="
+                        white-space: pre-wrap;
+                        word-warp: break-word;
+                        word-break: break-all;
+                    "
+                    >{{ base64ToString(value) }}</pre
                 >
-                    {{ base64ToString(value) }}
-                </div>
             </q-card>
-        </q-popup-proxy>
+        </q-dialog>
     </q-item-section>
     <q-item-section v-if="type == 'html'">
         <q-item-label class="ellipsis-3-lines">
-            <span v-html="value"></span>
+            <div v-html="value"></div>
         </q-item-label>
-        <q-popup-proxy context-menu>
-            <q-card
-                bordered
-                style="width: 80%; height: 60%"
-                class="fixed-center scroll"
-            >
-                <div
-                    v-html="value"
-                    class="absolute-center"
-                    style="max-width: 90%; max-height: 90%"
-                ></div>
+        <q-dialog v-model="popup" auto-close class="z-max">
+            <q-card class="q-pa-md scroll">
+                <div v-html="value"></div>
             </q-card>
-        </q-popup-proxy>
+        </q-dialog>
     </q-item-section>
     <q-item-section v-if="imageExt.includes(type)"
         ><img
             :src="'data:' + getMimeType(type) + ';base64,' + value"
             style="max-height: 300px; object-fit: contain; max-width: 100%"
         />
-        <q-popup-proxy context-menu>
-            <q-card
-                bordered
-                style="max-width: 80%; max-height: 80%"
-                class="fixed-center scroll fit"
-            >
+        <q-dialog
+            v-model="popup"
+            auto-close
+            full-height
+            full-width
+            class="z-max"
+        >
+            <q-card>
                 <img
                     :src="'data:' + getMimeType(type) + ';base64,' + value"
                     style="object-fit: contain"
                 />
             </q-card>
-        </q-popup-proxy>
+        </q-dialog>
     </q-item-section>
     <q-item-section v-if="videoExt.includes(type)">
         <video
@@ -130,6 +120,7 @@
                 videoExt: config.videoExt,
                 audioExt: config.audioExt,
                 textExt: config.textExt,
+                popup: false,
             };
         },
         methods: {
@@ -138,6 +129,9 @@
             },
             base64ToString(str) {
                 return Buffer.from(str, 'base64').toString('utf-8');
+            },
+            onPopup() {
+                this.popup = true;
             },
         },
     });
