@@ -29,21 +29,25 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - Click on an item to preview (if possible for some item types)
 
 ## Screenshots
-Android:
+Main:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/android.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-1.png?raw=true" width="600">
 
-Mac:
+Preview:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/mac.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-2.png?raw=true" width="600">
 
-Windows:
+Dark mode:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/win.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-3.png?raw=true" width="600">
 
-Github Private Repo:
+Search:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/GithubPrivateRepo.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-4.png?raw=true" width="600">
+
+On mobile:
+
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-5.png?raw=true" width="600">
 
 
 ## Build

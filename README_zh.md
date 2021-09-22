@@ -27,21 +27,25 @@
 - 单击可预览部分格式
 
 ## 截图
-Android:
+主界面:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/android.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-1.png?raw=true" width="600">
 
-Mac:
+预览:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/mac.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-2.png?raw=true" width="600">
 
-Windows:
+深色主题:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/win.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-3.png?raw=true" width="600">
 
-Github私人仓库:
+搜索:
 
-<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/GithubPrivateRepo.png?raw=true" width="600">
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-4.png?raw=true" width="600">
+
+手机端:
+
+<img src="https://github.com/dale0525/ClipBroad/blob/main/screenshot/screenshot-5.png?raw=true" width="600">
 
 
 ## 编译
