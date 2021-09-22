@@ -301,7 +301,7 @@
                 registerShortcutSuccess: true,
                 version: process.env.VERSION,
                 showUpdateBar: false,
-                checkUpdateMessage: '0%',
+                checkUpdateMessage: this.$t('newVersionCheck'),
                 checkUpdateValue: 0,
                 newVersionPopup: false,
             };
