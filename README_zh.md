@@ -6,7 +6,7 @@
 
 *登录Github账号时，ClipBroad会请求获得**user**和**repo**权限。这两个权限将用来获得用户的头像、用户名和Github API次数限制等信息，以及创建一个名为**ClipBroadHistory**的私人仓库，并向这个仓库提交和删除剪贴板内容。*
 
-**目前只支持Windows、Mac和Android。Linux和iOS理论上也支持，但是需要[自行编译](https://github.com/dale0525/ClipBroad#build)。**
+**目前并没有打算花钱开苹果开发者账号来上架iOS版本。另外，Linux版未经过测试。如果你发现任何问题，可以Fork后[自行编译](https://github.com/dale0525/ClipBroad#build)。**
 
 ## 功能
 - 完全免费

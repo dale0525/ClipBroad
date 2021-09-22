@@ -57,6 +57,7 @@
                 <img
                     :src="'data:' + getMimeType(type) + ';base64,' + value"
                     style="object-fit: contain"
+                    class="absolute-center"
                 />
             </q-card>
         </q-dialog>

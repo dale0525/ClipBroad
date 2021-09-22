@@ -105,13 +105,13 @@ function createWindow() {
 }
 
 function checkUpdate(){
-    if (process.platform === 'win32')
+    if (process.platform === 'darwin')
     {
-        autoUpdater.autoDownload = true;
+        autoUpdater.autoDownload = false;
     }
     else
     {
-        autoUpdater.autoDownload = false;
+        autoUpdater.autoDownload = true;
     }
     autoUpdater.checkForUpdates();
 }

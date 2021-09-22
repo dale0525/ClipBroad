@@ -104,7 +104,8 @@
                                 :name="itemIcon(items[index].type)"
                             />
                         </q-item-section>
-                        <ClipboardItem :ref="`clipboardItem${index}`"
+                        <ClipboardItem
+                            :ref="`clipboardItem${index}`"
                             :type="items[index].type"
                             :value="items[index].value.toString()"
                             :fileName="items[index].fileName"
@@ -836,7 +837,7 @@
             },
             syncNow(done) {
                 if (!this.$githubInstance.githubRepoExist) {
-                    this.$router.push('/settings');
+                    setTimeout(done, 300);
                 } else {
                     this.updateFromGithub()
                         .then(this.uploadToGithub())
@@ -855,81 +856,116 @@
                                 var item = intent.items[i];
                                 cordova.openwith.load(item, (data, item) => {
                                     cordova.plugins.clipboard.copy('');
-                                    var itemPath = item.path;
-                                    window.resolveLocalFileSystemURL(
-                                        'file://' + itemPath,
-                                        (fileEntry) => {
-                                            fileEntry.getMetadata(
-                                                (metadata) => {
-                                                    let fileSize =
-                                                        metadata.size /
-                                                        1024 /
-                                                        1024;
-                                                    if (
-                                                        fileSize >
-                                                        this.maxFileSize
-                                                    ) {
-                                                        this.$q.notify(
-                                                            this.$t(
-                                                                'maxFileSizeTip2'
-                                                            )
-                                                        );
-                                                        return;
-                                                    } else if (
-                                                        item.type == null
-                                                    ) {
-                                                        this.$q.notify(
-                                                            this.$t(
-                                                                'fileTypeNotSupported'
-                                                            )
-                                                        );
-                                                        return;
-                                                    } else {
-                                                        const ext =
-                                                            mime.getExtension(
-                                                                item.type
+                                    if (item.path != null && item.path != '') {
+                                        let itemPath = item.path;
+                                        window.resolveLocalFileSystemURL(
+                                            'file://' + itemPath,
+                                            (fileEntry) => {
+                                                fileEntry.getMetadata(
+                                                    (metadata) => {
+                                                        let fileSize =
+                                                            metadata.size /
+                                                            1024 /
+                                                            1024;
+                                                        if (
+                                                            fileSize >
+                                                            this.maxFileSize
+                                                        ) {
+                                                            this.$q.notify(
+                                                                this.$t(
+                                                                    'maxFileSizeTip2'
+                                                                )
                                                             );
-                                                        if (ext) {
-                                                            itemPath =
-                                                                itemPath.split(
-                                                                    '/'
-                                                                );
-                                                            var fullName =
-                                                                itemPath[
-                                                                    itemPath.length -
-                                                                        1
-                                                                ];
-                                                            var fullNameSplit =
-                                                                fullName.split(
-                                                                    '.'
-                                                                );
-                                                            var fileName =
-                                                                fullName.replace(
-                                                                    '.' +
-                                                                        fullNameSplit[
-                                                                            fullNameSplit.length -
-                                                                                1
-                                                                        ],
-                                                                    ''
-                                                                );
-                                                            this.addNewItem(
-                                                                null,
-                                                                data,
-                                                                true,
-                                                                null,
-                                                                false,
-                                                                ext,
-                                                                fileName,
-                                                                null,
-                                                                null,
-                                                                true
+                                                            return;
+                                                        } else if (
+                                                            item.type == null
+                                                        ) {
+                                                            this.$q.notify(
+                                                                this.$t(
+                                                                    'fileTypeNotSupported'
+                                                                )
                                                             );
+                                                            return;
+                                                        } else {
+                                                            const ext =
+                                                                mime.getExtension(
+                                                                    item.type
+                                                                );
+                                                            if (ext) {
+                                                                itemPath =
+                                                                    itemPath.split(
+                                                                        '/'
+                                                                    );
+                                                                var fullName =
+                                                                    itemPath[
+                                                                        itemPath.length -
+                                                                            1
+                                                                    ];
+                                                                var fullNameSplit =
+                                                                    fullName.split(
+                                                                        '.'
+                                                                    );
+                                                                var fileName =
+                                                                    fullName.replace(
+                                                                        '.' +
+                                                                            fullNameSplit[
+                                                                                fullNameSplit.length -
+                                                                                    1
+                                                                            ],
+                                                                        ''
+                                                                    );
+                                                                this.addNewItem(
+                                                                    null,
+                                                                    data,
+                                                                    true,
+                                                                    null,
+                                                                    false,
+                                                                    ext,
+                                                                    fileName,
+                                                                    null,
+                                                                    null,
+                                                                    true
+                                                                );
+                                                            }
                                                         }
                                                     }
-                                                }
+                                                );
+                                            }
+                                        );
+                                    } else if (
+                                        item.uri != null &&
+                                        item.uri != ''
+                                    ) {
+                                        const ext = mime.getExtension(
+                                            item.type
+                                        );
+                                        if (ext) {
+                                            let itemPath = item.uri.split('/');
+                                            var fullName =
+                                                itemPath[itemPath.length - 1];
+                                            var fullNameSplit =
+                                                fullName.split('.');
+                                            var fileName = fullName.replace(
+                                                '.' +
+                                                    fullNameSplit[
+                                                        fullNameSplit.length - 1
+                                                    ],
+                                                ''
+                                            );
+                                            this.addNewItem(
+                                                null,
+                                                data,
+                                                true,
+                                                null,
+                                                false,
+                                                ext,
+                                                fileName,
+                                                null,
+                                                null,
+                                                true
                                             );
                                         }
-                                    );
+                                    }
                                 });
                             }
                         });
@@ -1267,19 +1303,16 @@
                 this.toDeleteItems = [];
                 this.syncNow();
             },
-            previewItem(index){
+            previewItem(index) {
                 clickTimeout = null;
                 this.$refs[`clipboardItem${index}`].onPopup();
             },
-            handleClick(index){
-                if (clickTimeout != null)
-                {
+            handleClick(index) {
+                if (clickTimeout != null) {
                     clearTimeout(clickTimeout);
                     clickTimeout = null;
                     this.copyItem(index);
-                }
-                else
-                {
+                } else {
                     clickTimeout = setTimeout(() => {
                         this.previewItem(index);
                     }, config.doubleClickThreshold);

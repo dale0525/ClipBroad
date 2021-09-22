@@ -232,6 +232,9 @@ module.exports = configure(function (ctx) {
                 win:{
                     target: 'nsis'
                 },
+                linux:{
+                    target: 'AppImage'
+                },
             },
 
             // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
