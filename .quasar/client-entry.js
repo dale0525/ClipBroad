@@ -111,7 +111,10 @@ async function start ({ app, router, store, storeKey }, bootFiles) {
     
 
     
-      app.mount('#q-app')
+      document.addEventListener('deviceready', () => {
+        app.config.globalProperties.$q.cordova = window.cordova
+        app.mount('#q-app')
+      }, false) // on deviceready
     
 
     

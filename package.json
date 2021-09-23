@@ -1,9 +1,10 @@
 {
   "name": "clipbroad",
-  "version": "0.9.10",
+  "version": "1.0.0",
   "description": "Sync your clipboard across multiple devices",
   "productName": "ClipBroad",
   "author": "Logic Tan",
+  "homepage": "https://github.com/dale0525/ClipBroad",
   "private": true,
   "scripts": {
     "test": "echo \"No test specified\" && exit 0"
