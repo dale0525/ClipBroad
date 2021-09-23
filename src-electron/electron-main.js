@@ -6,6 +6,7 @@ import {
     Menu,
     ipcMain,
     globalShortcut,
+    powerMonitor,
 } from 'electron';
 import path from 'path';
 const AutoLaunch = require('auto-launch');
@@ -301,4 +302,12 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', () => {
     autoUpdater.quitAndInstall();
+});
+
+powerMonitor.on('resume', ()=>{
+    mainWindow.webContents.send('systemResume');
+});
+
+powerMonitor.on('unlock-screen', ()=>{
+    mainWindow.webContents.send('systemResume');
 });
