@@ -230,10 +230,11 @@ module.exports = configure(function (ctx) {
 
                 appId: 'com.logiconsole.clipbroad',
                 win:{
-                    target: 'nsis'
+                    target: 'nsis',
+                    verifyUpdateCodeSignature: false,
                 },
                 linux:{
-                    target: 'AppImage'
+                    target: 'AppImage',
                 },
             },
 
