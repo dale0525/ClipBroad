@@ -25,9 +25,6 @@ try {
             require('path').join(app.getPath('userData'), 'DevTools Extensions')
         );
     }
-    if (process.env.PROD) {
-        global.__statics = __dirname;
-    }
 } catch (_) {}
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -105,13 +102,10 @@ function createWindow() {
     });
 }
 
-function checkUpdate(){
-    if (process.platform === 'darwin')
-    {
+function checkUpdate() {
+    if (process.platform === 'darwin') {
         autoUpdater.autoDownload = false;
-    }
-    else
-    {
+    } else {
         autoUpdater.autoDownload = true;
     }
     autoUpdater.checkForUpdates();
@@ -121,7 +115,7 @@ app.on('ready', () => {
     createWindow();
     // tray = new Tray(require('path').resolve(__statics, 'favicon-16x16.png'));
     const path = process.env.PROD
-        ? require('path').resolve(__statics, 'tray-icon.png')
+        ? require('path').join(__dirname, 'tray-icon.png')
         : require('path').join(__dirname, 'icons/icon-dev.png');
     tray = new Tray(path);
     contextMenu = Menu.buildFromTemplate([
@@ -304,10 +298,10 @@ autoUpdater.on('update-downloaded', () => {
     autoUpdater.quitAndInstall();
 });
 
-powerMonitor.on('resume', ()=>{
+powerMonitor.on('resume', () => {
     mainWindow.webContents.send('systemResume');
 });
 
-powerMonitor.on('unlock-screen', ()=>{
+powerMonitor.on('unlock-screen', () => {
     mainWindow.webContents.send('systemResume');
 });
