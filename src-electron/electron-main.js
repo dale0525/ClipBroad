@@ -72,6 +72,7 @@ function createWindow() {
         height: 600,
         useContentSize: true,
         frame: false,
+        show: false,
         webPreferences: {
             contextIsolation: true,
             // More info: /quasar-cli/developing-electron-apps/electron-preload-script
@@ -301,13 +302,11 @@ autoUpdater.on('update-downloaded', () => {
 powerMonitor.on('resume', () => {
     app.relaunch();
     app.exit();
-    mainWindow.hide();
 });
 
 powerMonitor.on('unlock-screen', () => {
     app.relaunch();
     app.exit();
-    mainWindow.hide();
 });
 
 app.on('before-quit', ()=>{
