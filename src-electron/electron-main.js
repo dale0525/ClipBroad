@@ -299,9 +299,17 @@ autoUpdater.on('update-downloaded', () => {
 });
 
 powerMonitor.on('resume', () => {
-    mainWindow.webContents.send('systemResume');
+    app.relaunch();
+    app.exit();
+    mainWindow.hide();
 });
 
 powerMonitor.on('unlock-screen', () => {
-    mainWindow.webContents.send('systemResume');
+    app.relaunch();
+    app.exit();
+    mainWindow.hide();
+});
+
+app.on('before-quit', ()=>{
+    mainWindow.webContents.send('Sync');
 });

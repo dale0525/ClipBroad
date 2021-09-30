@@ -1345,7 +1345,6 @@
             if (!existEventListen) {
                 window.addEventListener('Sync', this.syncNow, false);
                 window.addEventListener('setDarkMode', this.setDarkMode, false);
-                window.addEventListener('systemResume', this.reSync, false);
                 existEventListen = true;
             }
             if (this.$q.platform.is.cordova) {
