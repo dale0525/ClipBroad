@@ -309,6 +309,15 @@ powerMonitor.on('unlock-screen', () => {
     app.exit();
 });
 
-app.on('before-quit', ()=>{
+app.on('before-quit', () => {
     mainWindow.webContents.send('Sync');
+});
+
+mainWindow.webContents.on('render-process-gone', function (e, detailed) {
+    //  logger.info("!crashed, reason: " + detailed.reason + ", exitCode = " + detailed.exitCode)
+    if (detailed.reason == 'crashed') {
+        // relaunch app
+        app.relaunch();
+        app.exit();
+    }
 });
