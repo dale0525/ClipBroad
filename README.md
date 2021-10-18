@@ -24,7 +24,7 @@ This tools uses Github private repo to store and sync your clipboard items. By d
 - On mobile, double tap text to copy, or double tap other files to share
 - Items are automatically uploaded every 30 seconds
 - Click tray icon on desktop to show/hide main panel
-- Keyboard shortcut is Control+Shift+V on Windows and Cmd+Shift+V on Mac (configurable)
+- Keyboard shortcut is Control+Shift+C on Windows and Cmd+Shift+C on Mac (configurable)
 - Files of common type can be shared to this app (ClipBroad) on mobile
 - Click on an item to preview (if possible for some item types)
 

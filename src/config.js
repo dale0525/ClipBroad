@@ -36,8 +36,8 @@ export default {
         darkMode: 'auto',
         maxFileSize: 5,
         shortcut: {
-            win: ['Control', 'Shift', 'V'],
-            mac: ['Meta', 'Shift', 'V'],
+            win: ['Control', 'Shift', 'C'],
+            mac: ['Meta', 'Shift', 'C'],
         },
     },
     githubClientID: 'fa79756f53d8c0a88ddd',

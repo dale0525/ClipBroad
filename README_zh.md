@@ -22,7 +22,7 @@
 - 在移动端双击文字可将其复制到剪贴板，双击其他文件可分享到其他应用
 - 每30秒会自动上传到Github
 - 单击桌面端图标可显示/隐藏主界面
-- 唤起主界面的快捷键为Ctrl+Shift+V(Windows)和Cmd+Shift+V(Mac)(可配置)
+- 唤起主界面的快捷键为Ctrl+Shift+C(Windows)和Cmd+Shift+C(Mac)(可配置)
 - 移动端可以将常用格式文件分享到本应用(ClipBroad)
 - 单击可预览部分格式
 

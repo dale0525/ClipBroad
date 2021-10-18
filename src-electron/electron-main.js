@@ -101,6 +101,15 @@ function createWindow() {
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
+
+    mainWindow.webContents.on('render-process-gone', function (e, detailed) {
+        //  logger.info("!crashed, reason: " + detailed.reason + ", exitCode = " + detailed.exitCode)
+        if (detailed.reason == 'crashed') {
+            // relaunch app
+            app.relaunch();
+            app.exit();
+        }
+    });
 }
 
 function checkUpdate() {
@@ -110,6 +119,23 @@ function checkUpdate() {
         autoUpdater.autoDownload = true;
     }
     autoUpdater.checkForUpdates();
+}
+
+function registerShortcut(shortcut) {
+    globalShortcut.unregisterAll();
+    shortcut = JSON.parse(shortcut);
+    var shortcutString = '';
+    shortcut.forEach((key) => {
+        if (key == 'Meta') {
+            shortcutString += '+' + 'Command';
+        } else {
+            shortcutString += '+' + key;
+        }
+    });
+    shortcutString = shortcutString.substr(1, shortcutString.length - 1);
+    return globalShortcut.register(shortcutString, () => {
+        mainWindow.show();
+    });
 }
 
 app.on('ready', () => {
@@ -152,6 +178,12 @@ app.on('ready', () => {
     }
 
     app.setAsDefaultProtocolClient('clipbroad');
+
+    if (process.platform === 'darwin') {
+        registerShortcut(JSON.stringify(['Meta', 'Shift', 'C']));
+    } else {
+        registerShortcut(JSON.stringify(['Control', 'Shift', 'C']));
+    }
 
     checkUpdate();
 });
@@ -215,19 +247,7 @@ ipcMain.on('registerAutoLaunch', (e, enable) => {
 });
 
 ipcMain.handle('registerShortcut', async (e, shortcut) => {
-    shortcut = JSON.parse(shortcut);
-    var shortcutString = '';
-    shortcut.forEach((key) => {
-        if (key == 'Meta') {
-            shortcutString += '+' + 'Command';
-        } else {
-            shortcutString += '+' + key;
-        }
-    });
-    shortcutString = shortcutString.substr(1, shortcutString.length - 1);
-    return globalShortcut.register(shortcutString, () => {
-        mainWindow.show();
-    });
+    registerShortcut(shortcut);
 });
 
 ipcMain.on('showWindow', (e, show) => {
@@ -311,13 +331,4 @@ powerMonitor.on('unlock-screen', () => {
 
 app.on('before-quit', () => {
     mainWindow.webContents.send('Sync');
-});
-
-mainWindow.webContents.on('render-process-gone', function (e, detailed) {
-    //  logger.info("!crashed, reason: " + detailed.reason + ", exitCode = " + detailed.exitCode)
-    if (detailed.reason == 'crashed') {
-        // relaunch app
-        app.relaunch();
-        app.exit();
-    }
 });
