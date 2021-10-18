@@ -247,7 +247,7 @@ ipcMain.on('registerAutoLaunch', (e, enable) => {
 });
 
 ipcMain.handle('registerShortcut', async (e, shortcut) => {
-    registerShortcut(shortcut);
+    return registerShortcut(shortcut);
 });
 
 ipcMain.on('showWindow', (e, show) => {
